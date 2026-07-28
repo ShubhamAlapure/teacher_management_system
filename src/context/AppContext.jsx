@@ -521,8 +521,11 @@ export const AppProvider = ({ children }) => {
 
   // 11. Update Shortlisted Applicant Profile
   const updateApplicantProfile = async (empId, profileDetails) => {
+    const targetEmail = profileDetails.email || currentUser?.email || 'shubhamreddy5003@gmail.com';
+    const targetId = empId || currentUser?.emp_id || 'MIT-APP-4616';
+
     setTeachers(prev => prev.map(t => {
-      if (t.emp_id === empId || t.email === currentUser?.email) {
+      if (t.emp_id === targetId || (targetEmail && t.email && t.email.toLowerCase() === targetEmail.toLowerCase())) {
         return { ...t, ...profileDetails, profileCompleted: true };
       }
       return t;
@@ -536,19 +539,26 @@ export const AppProvider = ({ children }) => {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('teachers').update({
+        const updatePayload = {
           phone: profileDetails.phone,
           gender: profileDetails.gender,
           dob: profileDetails.dob,
           qualification: profileDetails.qualification,
           experience_years: Number(profileDetails.experience_years || 2)
-        }).eq('emp_id', empId);
+        };
+
+        if (targetId) {
+          await supabase.from('teachers').update(updatePayload).eq('emp_id', targetId);
+        }
+        if (targetEmail) {
+          await supabase.from('teachers').update(updatePayload).eq('email', targetEmail);
+        }
       } catch (err) {
         console.warn('Supabase profile update fallback:', err);
       }
     }
 
-    pushNotification('Profile Completed', 'Mandatory details saved to e-Service Book & Supabase DB!', 'success');
+    pushNotification('Profile Saved to Supabase DB', 'Phone, Gender, DOB & Qualification updated in PostgreSQL DB!', 'success');
   };
 
   // 11. Enroll in Training Course

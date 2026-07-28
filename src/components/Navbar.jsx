@@ -8,7 +8,11 @@ import {
   ChevronDown, 
   LogOut, 
   CheckCircle2, 
-  RefreshCw
+  RefreshCw,
+  UserCheck,
+  X,
+  Edit3,
+  Save
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -21,15 +25,34 @@ export const Navbar = () => {
     activeTeacher,
     currentUser,
     resetToDemoData,
-    logout
+    logout,
+    updateApplicantProfile
   } = useApp();
 
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const dbStatus = getSupabaseStatus();
 
   const displayName = currentUser?.full_name || (role === 'admin' ? 'SHUBHAM SHARADRAO ALAPURE' : activeTeacher.full_name || 'Faculty Member');
   const displayId = currentUser?.emp_id || activeTeacher.emp_id || 'MIT-USER-01';
   const userInitials = displayName.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
+
+  const [editForm, setEditForm] = useState({
+    full_name: currentUser?.full_name || displayName,
+    email: currentUser?.email || 'shubhamreddy5003@gmail.com',
+    phone: currentUser?.phone || '+91 9876543210',
+    gender: currentUser?.gender || 'Male',
+    dob: currentUser?.dob || '1992-05-15',
+    qualification: currentUser?.qualification || 'Ph.D. / M.Tech',
+    specialization: currentUser?.specialization || 'Computer Science & AI'
+  });
+
+  const handleSaveProfile = (e) => {
+    e.preventDefault();
+    updateApplicantProfile(displayId, editForm);
+    setIsEditProfileModalOpen(false);
+    setIsRoleDropdownOpen(false);
+  };
 
   return (
     <header className="h-16 bg-gradient-to-r from-[#1e0b3b] via-[#311363] to-[#451884] text-white border-b border-purple-800/40 px-4 lg:px-6 flex items-center justify-between shadow-lg sticky top-0 z-40">
@@ -113,7 +136,7 @@ export const Navbar = () => {
             <ChevronDown className="w-3.5 h-3.5 text-purple-200" />
           </button>
 
-          {/* User Account Menu (NO Role Switching) */}
+          {/* User Account Menu */}
           {isRoleDropdownOpen && (
             <div className="absolute right-0 mt-2 w-72 bg-white border border-purple-200 rounded-2xl shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 text-slate-800">
               
@@ -143,17 +166,28 @@ export const Navbar = () => {
                 </div>
               </div>
 
-              {/* Sign Out Button */}
-              <div className="pt-2 border-t border-purple-100">
+              {/* Action Buttons: Edit Profile & Sign Out */}
+              <div className="pt-2 border-t border-purple-100 space-y-2">
+                <button
+                  onClick={() => {
+                    setIsRoleDropdownOpen(false);
+                    setIsEditProfileModalOpen(true);
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 text-xs font-bold transition-all flex items-center justify-center gap-2"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-purple-600" />
+                  Edit Profile Details
+                </button>
+
                 <button
                   onClick={() => {
                     setIsRoleDropdownOpen(false);
                     logout();
                   }}
-                  className="w-full py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold flex items-center justify-center gap-2 transition-all border border-rose-200"
+                  className="w-full py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all flex items-center justify-center gap-2"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out of Portal</span>
+                  <LogOut className="w-3.5 h-3.5 text-rose-600" />
+                  Sign Out of Portal
                 </button>
               </div>
             </div>
@@ -161,6 +195,114 @@ export const Navbar = () => {
         </div>
 
       </div>
+
+      {/* MODAL: Edit Profile Details */}
+      {isEditProfileModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-purple-200 text-slate-800 font-sans animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-purple-100 pb-3">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-purple-600" />
+                <h3 className="text-base font-extrabold text-purple-950">Edit Profile Details</h3>
+              </div>
+              <button 
+                onClick={() => setIsEditProfileModalOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Full Name</label>
+                <input 
+                  type="text"
+                  value={editForm.full_name}
+                  onChange={(e) => setEditForm({...editForm, full_name: e.target.value})}
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-600 font-medium"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Phone Number</label>
+                  <input 
+                    type="tel"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                    className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-600 font-medium"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Gender</label>
+                  <select 
+                    value={editForm.gender}
+                    onChange={(e) => setEditForm({...editForm, gender: e.target.value})}
+                    className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-600 font-medium"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Date of Birth</label>
+                <input 
+                  type="date"
+                  value={editForm.dob}
+                  onChange={(e) => setEditForm({...editForm, dob: e.target.value})}
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-600 font-medium"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Highest Qualification</label>
+                <input 
+                  type="text"
+                  value={editForm.qualification}
+                  onChange={(e) => setEditForm({...editForm, qualification: e.target.value})}
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-600 font-medium"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Specialization / Department</label>
+                <input 
+                  type="text"
+                  value={editForm.specialization}
+                  onChange={(e) => setEditForm({...editForm, specialization: e.target.value})}
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-600 font-medium"
+                  required
+                />
+              </div>
+
+              <div className="pt-3 flex gap-2">
+                <button 
+                  type="button" 
+                  onClick={() => setIsEditProfileModalOpen(false)}
+                  className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="w-1/2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold shadow-md shadow-purple-600/20 flex items-center justify-center gap-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  Save & Update DB
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </header>
   );
