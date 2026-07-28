@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS teachers (
   phone VARCHAR(20),
   gender VARCHAR(20),
   dob DATE,
-  joining_date DATE NOT NULL,
+  joining_date DATE DEFAULT CURRENT_DATE,
   cadre teacher_cadre NOT NULL DEFAULT 'TGT',
   subject VARCHAR(50) NOT NULL,
   current_school VARCHAR(150) NOT NULL,

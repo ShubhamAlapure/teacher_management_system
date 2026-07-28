@@ -642,12 +642,15 @@ export const AppProvider = ({ children }) => {
 
     if (isSupabaseConfigured && supabase) {
       try {
+        const todayDate = new Date().toISOString().split('T')[0];
+
         const { error } = await supabase.from('teachers').insert([{
           emp_id: userData.emp_id,
           full_name: userData.full_name,
           email: userData.email,
           password: passwordToStore,
-          cadre: newTeacher.cadre,
+          joining_date: todayDate,
+          cadre: 'TGT',
           subject: 'General Faculty',
           current_school: 'School of Engineering & Technology (SOE)',
           district: 'Rajbaug Campus',
