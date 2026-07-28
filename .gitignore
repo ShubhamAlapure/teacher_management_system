@@ -20,3 +20,4 @@ build
 *.sw?
 .vscode/
 .idea/
+.vercel

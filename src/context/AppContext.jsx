@@ -526,6 +526,50 @@ export const AppProvider = ({ children }) => {
     pushNotification('Welcome to TLMS', `Signed in as ${roleId.toUpperCase()} persona.`, 'success');
   };
 
+  const registerUser = async (userData) => {
+    const newTeacher = {
+      id: `tch-${Date.now()}`,
+      emp_id: userData.emp_id,
+      full_name: userData.full_name,
+      email: userData.email,
+      cadre: userData.role === 'applicant' ? 'Applicant' : userData.role === 'principal' ? 'Dean / HOD' : 'Assistant Professor',
+      subject: 'General Faculty',
+      current_school: 'School of Engineering & Technology (SOE)',
+      district: 'Rajbaug Campus',
+      block: 'Loni Kalbhor',
+      joining_date: new Date().toISOString().split('T')[0],
+      seniority_rank: teachers.length + 1,
+      basic_pay: 57700,
+      gpf_nps_no: `PF-MIT-${Date.now().toString().slice(-4)}`,
+      service_status: 'Active',
+      qualification: 'Ph.D. / M.Tech'
+    };
+
+    setTeachers(prev => [newTeacher, ...prev]);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('teachers').insert([{
+          emp_id: userData.emp_id,
+          full_name: userData.full_name,
+          email: userData.email,
+          cadre: newTeacher.cadre,
+          subject: 'General Faculty',
+          current_school: 'School of Engineering & Technology (SOE)',
+          district: 'Rajbaug Campus',
+          block: 'Loni Kalbhor',
+          gpf_nps_no: newTeacher.gpf_nps_no,
+          service_status: 'Active'
+        }]);
+      } catch (err) {
+        console.error('Supabase user registration insert error:', err);
+      }
+    }
+
+    login(userData.role, userData.emp_id);
+    pushNotification('User Registered in DB', `User ${userData.full_name} (${userData.emp_id}) saved to database.`, 'success');
+  };
+
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.setItem('shikshak_authenticated', 'false');
@@ -539,6 +583,7 @@ export const AppProvider = ({ children }) => {
         setRole,
         isAuthenticated,
         login,
+        registerUser,
         logout,
         activeTab,
         setActiveTab,

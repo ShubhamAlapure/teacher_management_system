@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
-  const { login, pushNotification } = useApp();
+  const { login, registerUser, pushNotification } = useApp();
 
   const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
   const [selectedRole, setSelectedRole] = useState(defaultRole);
@@ -90,8 +90,12 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
       ? `MIT-APP-${Date.now().toString().slice(-4)}`
       : `MIT-FAC-${Date.now().toString().slice(-4)}`;
 
-    pushNotification('Account Registered', `Account created for ${fullName}. Assigned ID: ${generatedId}`, 'success');
-    login(selectedRole, generatedId);
+    registerUser({
+      emp_id: generatedId,
+      full_name: fullName,
+      email: email,
+      role: selectedRole
+    });
   };
 
   return (
