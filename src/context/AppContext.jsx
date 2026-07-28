@@ -658,7 +658,33 @@ export const AppProvider = ({ children }) => {
       try {
         const todayDate = new Date().toISOString().split('T')[0];
 
-        // 1. Primary Insert
+        // 1. Separate Storage for Applicants in recruitment_applications Table
+        if (userData.role === 'applicant') {
+          const newApp = {
+            id: `app-${Date.now()}`,
+            applicant_id: userData.emp_id,
+            applicant_name: userData.full_name,
+            email: userData.email,
+            applied_post: 'Assistant Professor / Research Scholar',
+            department: 'School of Engineering & Technology (SOE)',
+            qualification: 'Ph.D. / M.Tech',
+            experience_years: 2,
+            status: 'Submitted',
+            applied_date: todayDate
+          };
+          setApplications(prev => [newApp, ...prev]);
+
+          await supabase.from('recruitment_applications').insert([{
+            applicant_id: userData.emp_id,
+            applicant_name: userData.full_name,
+            email: userData.email,
+            applied_post: 'Assistant Professor',
+            department: 'School of Engineering & Technology (SOE)',
+            status: 'Submitted'
+          }]);
+        }
+
+        // 2. Primary Insert into teachers Table
         let { error } = await supabase.from('teachers').insert([{
           emp_id: userData.emp_id,
           full_name: userData.full_name,
@@ -673,7 +699,6 @@ export const AppProvider = ({ children }) => {
           service_status: 'Active'
         }]);
 
-        // 2. Compatible Fallback Retry if schema column mismatch occurs
         if (error) {
           console.warn('Primary insert note:', error.message, 'Attempting schema-compatible insert...');
           const fallbackRes = await supabase.from('teachers').insert([{
