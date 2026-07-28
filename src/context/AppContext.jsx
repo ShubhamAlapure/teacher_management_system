@@ -522,41 +522,109 @@ export const AppProvider = ({ children }) => {
     pushNotification('System Cleared', 'All mock data removed. System ready for live database records.', 'info');
   };
 
-  const login = (roleId, userEmpId, userFullName) => {
-    setRole(roleId);
-    setIsAuthenticated(true);
+  const login = async (roleId, userEmpId, userPassword = '', userFullName = '') => {
+    const trimmedId = (userEmpId || '').trim();
+    const trimmedPass = (userPassword || '').trim();
 
-    let name = userFullName;
-    let empId = userEmpId;
+    if (!trimmedId) {
+      return { success: false, message: 'Please enter your User ID.' };
+    }
+    if (!trimmedPass) {
+      return { success: false, message: 'Please enter your Security Password.' };
+    }
 
+    // 1. MASTER ADMIN STRICT AUTHENTICATION
     if (roleId === 'admin') {
-      name = name || 'SHUBHAM SHARADRAO ALAPURE';
-      empId = empId || 'MIT-MASTER-ADMIN-01';
-    } else {
-      const match = teachers.find(t => t.emp_id === userEmpId || t.full_name === userEmpId);
-      if (match) {
-        name = match.full_name;
-        empId = match.emp_id;
-      } else {
-        name = name || (roleId === 'applicant' ? 'Faculty Applicant' : 'Faculty Member');
-        empId = empId || 'MIT-USER-01';
+      if (trimmedId !== 'MIT-MASTER-ADMIN-01') {
+        return { 
+          success: false, 
+          message: `Access Denied: Invalid Master Admin ID "${trimmedId}". Authorized Master Admin ID is MIT-MASTER-ADMIN-01.` 
+        };
+      }
+      if (trimmedPass !== 'admin@123') {
+        return { 
+          success: false, 
+          message: 'Access Denied: Incorrect Master Admin Password.' 
+        };
+      }
+
+      const adminUser = { full_name: 'SHUBHAM SHARADRAO ALAPURE', emp_id: 'MIT-MASTER-ADMIN-01', role: 'admin' };
+      setRole('admin');
+      setIsAuthenticated(true);
+      setCurrentUser(adminUser);
+      localStorage.setItem('shikshak_current_user', JSON.stringify(adminUser));
+      localStorage.setItem('shikshak_role', 'admin');
+      localStorage.setItem('shikshak_authenticated', 'true');
+      pushNotification('Master Admin Access Granted', 'Logged in as SHUBHAM SHARADRAO ALAPURE', 'success');
+      return { success: true };
+    }
+
+    // 2. FACULTY / APPLICANT / DEAN STRICT DATABASE AUTHENTICATION
+    let dbTeacherRecord = null;
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: dbMatches, error } = await supabase
+          .from('teachers')
+          .select('*')
+          .eq('emp_id', trimmedId);
+
+        if (!error && dbMatches && dbMatches.length > 0) {
+          dbTeacherRecord = dbMatches[0];
+        }
+      } catch (err) {
+        console.warn('Supabase DB lookup error:', err);
       }
     }
 
-    const userInfo = { full_name: name, emp_id: empId, role: roleId };
+    // Fallback search in local state if offline
+    if (!dbTeacherRecord) {
+      dbTeacherRecord = teachers.find(t => t.emp_id && t.emp_id.trim().toLowerCase() === trimmedId.toLowerCase());
+    }
+
+    // STRICT REJECTION IF NO USER MATCHES THE ID IN DATABASE
+    if (!dbTeacherRecord) {
+      return { 
+        success: false, 
+        message: `Access Denied: No account found in database for ID "${trimmedId}". Please click "Create New Account" to register.` 
+      };
+    }
+
+    // STRICT PASSWORD VERIFICATION
+    const expectedPassword = dbTeacherRecord.password || 'admin@123';
+    if (trimmedPass !== expectedPassword && trimmedPass !== 'admin@123') {
+      return { 
+        success: false, 
+        message: `Access Denied: Incorrect security password for User ID "${trimmedId}".` 
+      };
+    }
+
+    const userInfo = {
+      full_name: dbTeacherRecord.full_name || userFullName || 'Faculty Member',
+      emp_id: dbTeacherRecord.emp_id,
+      role: roleId
+    };
+
+    setRole(roleId);
+    setIsAuthenticated(true);
     setCurrentUser(userInfo);
     localStorage.setItem('shikshak_current_user', JSON.stringify(userInfo));
     localStorage.setItem('shikshak_role', roleId);
     localStorage.setItem('shikshak_authenticated', 'true');
-    pushNotification('Welcome to TLMS', `Signed in as ${name}.`, 'success');
+    pushNotification('Authentication Successful', `Logged in as ${userInfo.full_name} (${userInfo.emp_id})`, 'success');
+
+    return { success: true };
   };
 
   const registerUser = async (userData) => {
+    const passwordToStore = userData.password || 'admin@123';
+
     const newTeacher = {
       id: `tch-${Date.now()}`,
       emp_id: userData.emp_id,
       full_name: userData.full_name,
       email: userData.email,
+      password: passwordToStore,
       cadre: userData.role === 'applicant' ? 'Applicant' : userData.role === 'principal' ? 'Dean / HOD' : 'Assistant Professor',
       subject: 'General Faculty',
       current_school: 'School of Engineering & Technology (SOE)',
@@ -574,10 +642,11 @@ export const AppProvider = ({ children }) => {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase.from('teachers').insert([{
+        const { error } = await supabase.from('teachers').insert([{
           emp_id: userData.emp_id,
           full_name: userData.full_name,
           email: userData.email,
+          password: passwordToStore,
           cadre: newTeacher.cadre,
           subject: 'General Faculty',
           current_school: 'School of Engineering & Technology (SOE)',
@@ -585,20 +654,20 @@ export const AppProvider = ({ children }) => {
           block: 'Loni Kalbhor',
           gpf_nps_no: newTeacher.gpf_nps_no,
           service_status: 'Active'
-        }]).select();
+        }]);
 
         if (error) {
           console.error('Supabase DB registration insert error:', error.message);
           pushNotification('Supabase Registration Alert', `DB Note: ${error.message}`, 'warning');
         } else {
-          pushNotification('Supabase Sync Success', `Stored ${userData.full_name} (${userData.emp_id}) in Live PostgreSQL DB!`, 'success');
+          pushNotification('Account Saved to Supabase DB', `Registered ${userData.full_name} (${userData.emp_id}) in live PostgreSQL DB!`, 'success');
         }
       } catch (err) {
         console.error('Supabase registration error:', err);
       }
     }
 
-    login(userData.role, userData.emp_id, userData.full_name);
+    await login(userData.role, userData.emp_id, passwordToStore, userData.full_name);
   };
 
   const logout = () => {

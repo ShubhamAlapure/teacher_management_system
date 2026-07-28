@@ -21,6 +21,7 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
 
   const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
   const [selectedRole, setSelectedRole] = useState(defaultRole);
+  const [authError, setAuthError] = useState('');
   
   // Sign In Form States
   const [empId, setEmpId] = useState('');
@@ -74,9 +75,19 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
     pushNotification('Demo Credentials Filled', `Loaded ID ${selectedObj.demoId || 'MIT-FAC-2021-4091'}`, 'info');
   };
 
-  const handleSignInSubmit = (e) => {
+  const handleSignInSubmit = async (e) => {
     e.preventDefault();
-    login(selectedRole, empId || 'MIT-USER-01');
+    setAuthError('');
+
+    if (!empId.trim()) {
+      setAuthError('Please enter your Faculty / Application / Admin ID.');
+      return;
+    }
+
+    const res = await login(selectedRole, empId, password);
+    if (!res || !res.success) {
+      setAuthError(res?.message || 'Access Denied: Invalid credentials.');
+    }
   };
 
   const handleSignUpSubmit = (e) => {
@@ -94,6 +105,7 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
       emp_id: generatedId,
       full_name: fullName,
       email: email,
+      password: signupPassword,
       role: selectedRole
     });
   };
@@ -269,6 +281,13 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
                     />
                   </div>
                 </div>
+
+                {authError && (
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs font-bold text-red-700 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-red-600 animate-ping shrink-0" />
+                    <span>{authError}</span>
+                  </div>
+                )}
 
                 <button
                   type="submit"

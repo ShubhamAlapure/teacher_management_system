@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS teachers (
   experience_years INT DEFAULT 0,
   basic_pay NUMERIC(10, 2) DEFAULT 44900.00,
   gpf_nps_no VARCHAR(50),
+  password VARCHAR(255) DEFAULT 'admin@123',
   seniority_rank INT,
   service_status VARCHAR(50) DEFAULT 'Active',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
