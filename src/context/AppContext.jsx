@@ -473,9 +473,41 @@ export const AppProvider = ({ children }) => {
     pushNotification('APAR Graded', `Appraisal updated with Grade: ${grade || 'Reviewed'}.`, 'success');
   };
 
-  // 9. Upload Document
+  // 9. Upload Document — uploads actual file to Supabase Storage and stores public URL
   const uploadDocument = async (docData) => {
-    const fileUrlToSave = docData.file_data || docData.file_url || docData.file_name;
+    let publicUrl = null;
+
+    // Step 1: Upload actual file binary to Supabase Storage
+    if (isSupabaseConfigured && supabase && docData.file_object) {
+      try {
+        const file = docData.file_object;
+        const ext = file.name.split('.').pop();
+        const filePath = `documents/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+
+        const { data: storageData, error: storageErr } = await supabase.storage
+          .from('teacher-docs')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: file.type
+          });
+
+        if (storageErr) {
+          console.warn('Storage upload note:', storageErr.message);
+        } else {
+          const { data: urlData } = supabase.storage
+            .from('teacher-docs')
+            .getPublicUrl(filePath);
+          publicUrl = urlData?.publicUrl || null;
+        }
+      } catch (err) {
+        console.warn('Supabase storage error:', err);
+      }
+    }
+
+    // Step 2: Fallback to Base64 Data URL for local preview if Storage failed
+    const fileUrlToStore = publicUrl || docData.file_data || docData.file_name || 'document.pdf';
+
     const newDoc = {
       id: `doc-${Date.now()}`,
       teacher_id: activeTeacher.id,
@@ -483,27 +515,36 @@ export const AppProvider = ({ children }) => {
       status: 'Pending',
       verified_by: 'Pending Audit',
       uploaded_at: new Date().toISOString().split('T')[0],
-      file_url: fileUrlToSave,
+      file_url: fileUrlToStore,
+      file_data: docData.file_data || null,
       ...docData
     };
 
     setDocuments(prev => [newDoc, ...prev]);
 
+    // Step 3: Store file_url (public URL or filename) in teacher_documents table
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('teacher_documents').insert([{
+        const { error: insertErr } = await supabase.from('teacher_documents').insert([{
           teacher_id: activeTeacher.id,
           doc_name: docData.doc_name,
           doc_category: docData.doc_category,
-          file_url: fileUrlToSave,
+          file_url: fileUrlToStore,
           status: 'Pending'
         }]);
+        if (insertErr) console.warn('teacher_documents insert:', insertErr.message);
       } catch (err) {
-        console.error('Supabase document upload error:', err);
+        console.error('Supabase document insert error:', err);
       }
     }
 
-    pushNotification('Document Uploaded', `${docData.doc_name} saved to Vault with exact file preview.`, 'info');
+    pushNotification(
+      'Document Uploaded',
+      publicUrl
+        ? `${docData.doc_name} uploaded to Supabase Storage — preview available!`
+        : `${docData.doc_name} saved locally — preview in this session.`,
+      'info'
+    );
   };
 
   // 10. Verify Document
