@@ -475,6 +475,7 @@ export const AppProvider = ({ children }) => {
 
   // 9. Upload Document
   const uploadDocument = async (docData) => {
+    const fileUrlToSave = docData.file_data || docData.file_url || docData.file_name;
     const newDoc = {
       id: `doc-${Date.now()}`,
       teacher_id: activeTeacher.id,
@@ -482,6 +483,7 @@ export const AppProvider = ({ children }) => {
       status: 'Pending',
       verified_by: 'Pending Audit',
       uploaded_at: new Date().toISOString().split('T')[0],
+      file_url: fileUrlToSave,
       ...docData
     };
 
@@ -493,7 +495,7 @@ export const AppProvider = ({ children }) => {
           teacher_id: activeTeacher.id,
           doc_name: docData.doc_name,
           doc_category: docData.doc_category,
-          file_url: docData.file_name,
+          file_url: fileUrlToSave,
           status: 'Pending'
         }]);
       } catch (err) {
@@ -501,7 +503,7 @@ export const AppProvider = ({ children }) => {
       }
     }
 
-    pushNotification('Document Uploaded', `${docData.doc_name} added to Digital Vault.`, 'info');
+    pushNotification('Document Uploaded', `${docData.doc_name} saved to Vault with exact file preview.`, 'info');
   };
 
   // 10. Verify Document
