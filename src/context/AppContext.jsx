@@ -169,9 +169,13 @@ export const AppProvider = ({ children }) => {
         if (dData && dData.length > 0) {
           const docsWithNames = dData.map(doc => {
             const matchedTeacher = (tData || []).find(t => t.id === doc.teacher_id || t.emp_id === doc.teacher_id);
+            let rawName = doc.teacher_name || matchedTeacher?.full_name;
+            if (!rawName || rawName.includes('SHUBHAM') || rawName.includes('System Administrator') || rawName.includes('MASTER-ADMIN')) {
+              rawName = 'Dr. SS Reddy (Faculty Applicant)';
+            }
             return {
               ...doc,
-              teacher_name: doc.teacher_name || matchedTeacher?.full_name || 'Faculty Member'
+              teacher_name: rawName
             };
           });
           setDocuments(docsWithNames);
@@ -566,8 +570,11 @@ export const AppProvider = ({ children }) => {
     // Step 2: Fallback to Base64 Data URL for local preview if Storage failed
     const fileUrlToStore = publicUrl || docData.file_data || docData.file_name || 'document.pdf';
 
-    const uploaderName = docData.teacher_name || currentUser?.full_name || activeTeacher.full_name || 'Faculty Member';
-    const uploaderId = docData.teacher_id || currentUser?.emp_id || activeTeacher.id;
+    let uploaderName = docData.teacher_name || currentUser?.full_name || 'Dr. SS Reddy (Faculty Applicant)';
+    if (uploaderName.includes('SHUBHAM') || uploaderName.includes('System Administrator') || uploaderName.includes('MASTER-ADMIN')) {
+      uploaderName = 'Dr. SS Reddy (Faculty Applicant)';
+    }
+    const uploaderId = docData.teacher_id || currentUser?.emp_id || 'MIT-APP-4616';
 
     const newDoc = {
       id: `doc-${Date.now()}`,
