@@ -172,8 +172,9 @@ ALTER TABLE leave_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE apar_evaluations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE teacher_documents ENABLE ROW LEVEL SECURITY;
 
--- Allow public read access for demo purposes
-CREATE POLICY "Allow public read teachers" ON teachers FOR SELECT USING (true);
+-- Allow full access for anon/publishable client inserts & queries
+DROP POLICY IF EXISTS "Allow public read teachers" ON teachers;
+CREATE POLICY "Allow public all teachers" ON teachers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public all recruitment" ON recruitment_applications FOR ALL USING (true);
 CREATE POLICY "Allow public all transfers" ON transfer_requests FOR ALL USING (true);
 CREATE POLICY "Allow public all leaves" ON leave_requests FOR ALL USING (true);
