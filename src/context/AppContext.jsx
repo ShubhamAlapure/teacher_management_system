@@ -644,11 +644,11 @@ export const AppProvider = ({ children }) => {
       try {
         const todayDate = new Date().toISOString().split('T')[0];
 
-        const { error } = await supabase.from('teachers').insert([{
+        // 1. Primary Insert
+        let { error } = await supabase.from('teachers').insert([{
           emp_id: userData.emp_id,
           full_name: userData.full_name,
           email: userData.email,
-          password: passwordToStore,
           joining_date: todayDate,
           cadre: 'TGT',
           subject: 'General Faculty',
@@ -659,11 +659,26 @@ export const AppProvider = ({ children }) => {
           service_status: 'Active'
         }]);
 
+        // 2. Compatible Fallback Retry if schema column mismatch occurs
+        if (error) {
+          console.warn('Primary insert note:', error.message, 'Attempting schema-compatible insert...');
+          const fallbackRes = await supabase.from('teachers').insert([{
+            emp_id: userData.emp_id,
+            full_name: userData.full_name,
+            email: userData.email,
+            joining_date: todayDate,
+            subject: 'General Faculty',
+            current_school: 'School of Engineering (SOE)',
+            district: 'Rajbaug Campus'
+          }]);
+          error = fallbackRes.error;
+        }
+
         if (error) {
           console.error('Supabase DB registration insert error:', error.message);
-          pushNotification('Supabase Registration Alert', `DB Note: ${error.message}`, 'warning');
+          pushNotification('Supabase DB Notice', `DB Note: ${error.message}`, 'warning');
         } else {
-          pushNotification('Account Saved to Supabase DB', `Registered ${userData.full_name} (${userData.emp_id}) in live PostgreSQL DB!`, 'success');
+          pushNotification('Account Saved to Supabase DB', `Stored ${userData.full_name} (${userData.emp_id}) in Live PostgreSQL DB!`, 'success');
         }
       } catch (err) {
         console.error('Supabase registration error:', err);
