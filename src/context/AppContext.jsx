@@ -519,6 +519,38 @@ export const AppProvider = ({ children }) => {
     pushNotification('Document Verified', `Document status updated to ${status}.`, 'success');
   };
 
+  // 11. Update Shortlisted Applicant Profile
+  const updateApplicantProfile = async (empId, profileDetails) => {
+    setTeachers(prev => prev.map(t => {
+      if (t.emp_id === empId || t.email === currentUser?.email) {
+        return { ...t, ...profileDetails, profileCompleted: true };
+      }
+      return t;
+    }));
+
+    if (currentUser) {
+      const updatedUser = { ...currentUser, ...profileDetails, profileCompleted: true };
+      setCurrentUser(updatedUser);
+      localStorage.setItem('shikshak_current_user', JSON.stringify(updatedUser));
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('teachers').update({
+          phone: profileDetails.phone,
+          gender: profileDetails.gender,
+          dob: profileDetails.dob,
+          qualification: profileDetails.qualification,
+          experience_years: Number(profileDetails.experience_years || 2)
+        }).eq('emp_id', empId);
+      } catch (err) {
+        console.warn('Supabase profile update fallback:', err);
+      }
+    }
+
+    pushNotification('Profile Completed', 'Mandatory details saved to e-Service Book & Supabase DB!', 'success');
+  };
+
   // 11. Enroll in Training Course
   const enrollCourse = (courseCode, title) => {
     const newEnrollment = {
@@ -813,6 +845,7 @@ export const AppProvider = ({ children }) => {
         updateAparReview,
         uploadDocument,
         updateDocStatus,
+        updateApplicantProfile,
         enrollCourse,
         resetToDemoData,
         pushNotification

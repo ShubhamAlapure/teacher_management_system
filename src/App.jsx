@@ -14,6 +14,7 @@ import { DocumentVaultModule } from './components/DocumentVault/DocumentVaultMod
 import { AnalyticsModule } from './components/Analytics/AnalyticsModule';
 import { NotificationsModal } from './components/NotificationsModal';
 import { SupabaseConfigModal } from './components/SupabaseConfigModal';
+import { ShortlistProfileModal } from './components/ShortlistProfileModal';
 
 const MainContent = () => {
   const { activeTab } = useApp();
@@ -68,6 +69,7 @@ const AppShell = () => {
       </div>
       <NotificationsModal />
       <SupabaseConfigModal />
+      <ShortlistProfileModal />
     </div>
   );
 };
