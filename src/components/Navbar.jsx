@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { getSupabaseStatus } from '../lib/supabaseClient';
 import { MitAdtLogo } from './MitAdtLogo';
 import { 
   Bell, 
-  Search, 
   ChevronDown, 
   LogOut, 
   CheckCircle2, 
-  RefreshCw,
   UserCheck,
   X,
   Edit3,
@@ -18,20 +15,16 @@ import {
 export const Navbar = () => {
   const { 
     role, 
-    searchQuery, 
-    setSearchQuery, 
     notifications, 
     setIsNotificationModalOpen,
     activeTeacher,
     currentUser,
-    resetToDemoData,
     logout,
     updateApplicantProfile
   } = useApp();
 
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
-  const dbStatus = getSupabaseStatus();
 
   const displayName = currentUser?.full_name || activeTeacher.full_name || 'MIT-ADT Staff';
   const displayId = currentUser?.emp_id || activeTeacher.emp_id || 'MIT-USER-01';
@@ -62,45 +55,8 @@ export const Navbar = () => {
         <MitAdtLogo />
       </div>
 
-      {/* Global Portal Search Input */}
-      <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
-        <div className="relative w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-300" />
-          <input
-            type="text"
-            placeholder="Search faculty by name, employee ID, department, or location..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-1.5 rounded-full bg-purple-950/40 border border-purple-400/30 text-xs text-white placeholder:text-purple-300/70 focus:outline-none focus:ring-2 focus:ring-purple-400/50 transition-all"
-          />
-          {searchQuery && (
-            <button 
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] bg-purple-800/60 px-1.5 py-0.5 rounded text-purple-200 hover:text-white"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Right Controls */}
       <div className="flex items-center gap-3">
-        
-        {/* Live Supabase Status Pill */}
-        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-[11px] font-bold text-emerald-300">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Live Supabase Connected</span>
-        </div>
-
-        {/* Reset Demo */}
-        <button
-          onClick={resetToDemoData}
-          className="p-2 rounded-full bg-purple-950/50 text-purple-200 hover:bg-purple-800/40 transition-all border border-purple-400/20"
-          title="Reset System Cache"
-        >
-          <RefreshCw className="w-4 h-4" />
-        </button>
 
         {/* Notifications Bell */}
         <button
