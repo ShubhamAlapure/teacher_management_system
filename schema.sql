@@ -181,3 +181,38 @@ CREATE POLICY "Allow public all transfers" ON transfer_requests FOR ALL USING (t
 CREATE POLICY "Allow public all leaves" ON leave_requests FOR ALL USING (true);
 CREATE POLICY "Allow public all apar" ON apar_evaluations FOR ALL USING (true);
 CREATE POLICY "Allow public all docs" ON teacher_documents FOR ALL USING (true);
+
+-- 9. INITIAL SYSTEM SEED DATA (MASTER ADMIN & DEAN)
+INSERT INTO teachers (
+  emp_id, full_name, email, joining_date, cadre, subject, 
+  current_school, district, block, gpf_nps_no, service_status, password
+) VALUES 
+(
+  'MIT-MASTER-ADMIN-01', 
+  'SHUBHAM SHARADRAO ALAPURE', 
+  'shubham.alapure@mituniversity.edu.in', 
+  '2015-01-01', 
+  'Principal', 
+  'Master Administration & VC Office', 
+  'MIT-ADT University Secretariat', 
+  'Rajbaug Campus', 
+  'Loni Kalbhor', 
+  'PF-MIT-ADMIN-001', 
+  'Active',
+  'admin@123'
+),
+(
+  'MIT-DEAN-2012-0056', 
+  'Dr. Rajesh Kumar (School Dean)', 
+  'dean.soe@mituniversity.edu.in', 
+  '2018-06-01', 
+  'Principal', 
+  'School of Engineering & Technology', 
+  'School of Engineering (SOE)', 
+  'Rajbaug Campus', 
+  'Loni Kalbhor', 
+  'PF-MIT-DEAN-056', 
+  'Active',
+  'admin@123'
+)
+ON CONFLICT (emp_id) DO NOTHING;

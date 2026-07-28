@@ -102,6 +102,42 @@ export const AppProvider = ({ children }) => {
 
     const fetchSupabaseData = async () => {
       try {
+        // Ensure Master Admin exists in Supabase DB
+        const { data: adminExists } = await supabase.from('teachers').select('*').eq('emp_id', 'MIT-MASTER-ADMIN-01');
+        if (!adminExists || adminExists.length === 0) {
+          await supabase.from('teachers').insert([{
+            emp_id: 'MIT-MASTER-ADMIN-01',
+            full_name: 'SHUBHAM SHARADRAO ALAPURE',
+            email: 'shubham.alapure@mituniversity.edu.in',
+            joining_date: '2015-01-01',
+            cadre: 'Principal',
+            subject: 'Master Administration & VC Office',
+            current_school: 'MIT-ADT University Secretariat',
+            district: 'Rajbaug Campus',
+            block: 'Loni Kalbhor',
+            gpf_nps_no: 'PF-MIT-ADMIN-001',
+            service_status: 'Active'
+          }]);
+        }
+
+        // Ensure HOD/Dean exists in Supabase DB
+        const { data: deanExists } = await supabase.from('teachers').select('*').eq('emp_id', 'MIT-DEAN-2012-0056');
+        if (!deanExists || deanExists.length === 0) {
+          await supabase.from('teachers').insert([{
+            emp_id: 'MIT-DEAN-2012-0056',
+            full_name: 'Dr. Rajesh Kumar (School Dean)',
+            email: 'dean.soe@mituniversity.edu.in',
+            joining_date: '2018-06-01',
+            cadre: 'Principal',
+            subject: 'School of Engineering & Technology',
+            current_school: 'School of Engineering (SOE)',
+            district: 'Rajbaug Campus',
+            block: 'Loni Kalbhor',
+            gpf_nps_no: 'PF-MIT-DEAN-056',
+            service_status: 'Active'
+          }]);
+        }
+
         const { data: tData } = await supabase.from('teachers').select('*');
         if (tData && tData.length > 0) setTeachers(tData);
 
