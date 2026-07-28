@@ -18,6 +18,7 @@ export const LeavePayrollModule = () => {
     addLeaveRequest, 
     updateLeaveStatus, 
     activeTeacher, 
+    currentUser,
     role 
   } = useApp();
 
@@ -166,7 +167,7 @@ export const LeavePayrollModule = () => {
                 <tbody className="divide-y divide-purple-100 text-slate-700">
                   {leaves.map((l) => (
                     <tr key={l.id} className="hover:bg-purple-50/50">
-                      <td className="p-3 font-extrabold text-slate-900">{l.teacher_name}</td>
+                      <td className="p-3 font-extrabold text-slate-900">{l.teacher_name || currentUser?.full_name || activeTeacher.full_name || 'Faculty Member'}</td>
                       <td className="p-3 text-purple-900 font-bold">{l.leave_type}</td>
                       <td className="p-3 text-slate-600">{l.start_date} to {l.end_date}</td>
                       <td className="p-3 font-extrabold text-slate-900">{l.total_days} Days</td>

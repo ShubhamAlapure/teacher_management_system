@@ -398,10 +398,11 @@ export const AppProvider = ({ children }) => {
 
   // 5. Submit Leave Application
   const addLeaveRequest = async (leaveData) => {
+    const teacherName = activeTeacher.full_name || currentUser?.full_name || 'Faculty Member';
     const newLeave = {
       id: `lv-${Date.now()}`,
-      teacher_id: activeTeacher.id,
-      teacher_name: activeTeacher.full_name,
+      teacher_id: activeTeacher.id || currentUser?.emp_id,
+      teacher_name: teacherName,
       status: 'Pending',
       created_at: new Date().toISOString().split('T')[0],
       ...leaveData
