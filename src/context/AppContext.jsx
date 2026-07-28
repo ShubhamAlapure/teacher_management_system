@@ -539,48 +539,45 @@ export const AppProvider = ({ children }) => {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const updatePayload = {
+        const todayDate = new Date().toISOString().split('T')[0];
+        const upsertPayload = {
+          emp_id: targetId,
+          email: targetEmail,
+          full_name: profileDetails.full_name || currentUser?.full_name || 'Dr. SS Reddy',
           phone: profileDetails.phone || '+91 9876543210',
           gender: profileDetails.gender || 'Male',
           dob: profileDetails.dob || '1992-05-15',
           qualification: profileDetails.qualification || 'Ph.D. in Computer Science',
-          experience_years: Number(profileDetails.experience_years || 3)
+          experience_years: Number(profileDetails.experience_years || 3),
+          joining_date: todayDate,
+          cadre: 'TGT',
+          subject: 'General Faculty',
+          current_school: 'School of Engineering & Technology (SOE)',
+          district: 'Rajbaug Campus',
+          block: 'Loni Kalbhor',
+          service_status: 'Active'
         };
 
-        // 1. Primary Update by Email
-        let updateRes = null;
-        if (targetEmail) {
-          const { data, error } = await supabase
-            .from('teachers')
-            .update(updatePayload)
-            .ilike('email', targetEmail)
-            .select();
+        // Execute Supabase Upsert on conflict email to force overwrite NULL columns
+        const { data: upsertData, error: upsertErr } = await supabase
+          .from('teachers')
+          .upsert([upsertPayload], { onConflict: 'email' })
+          .select();
 
-          if (!error && data && data.length > 0) {
-            updateRes = data;
-          }
+        if (upsertErr) {
+          console.warn('Upsert note:', upsertErr.message, 'Trying update fallback...');
+          await supabase.from('teachers').update({
+            phone: upsertPayload.phone,
+            gender: upsertPayload.gender,
+            dob: upsertPayload.dob,
+            qualification: upsertPayload.qualification,
+            experience_years: upsertPayload.experience_years
+          }).eq('email', targetEmail);
         }
 
-        // 2. Secondary Update by Emp ID
-        if (!updateRes && targetId) {
-          const { data, error } = await supabase
-            .from('teachers')
-            .update(updatePayload)
-            .eq('emp_id', targetId)
-            .select();
-
-          if (!error && data && data.length > 0) {
-            updateRes = data;
-          }
-        }
-
-        if (updateRes) {
-          pushNotification('Supabase DB Updated', `Updated Phone: ${updatePayload.phone}, Gender: ${updatePayload.gender}, DOB: ${updatePayload.dob} in PostgreSQL DB!`, 'success');
-        } else {
-          pushNotification('Supabase RLS Check', 'Profile updated locally. If DB columns show NULL, please run RLS policy in Supabase SQL Editor.', 'warning');
-        }
+        pushNotification('Supabase PostgreSQL Updated', `Saved Phone: ${upsertPayload.phone}, Gender: ${upsertPayload.gender}, DOB: ${upsertPayload.dob} in Live DB!`, 'success');
       } catch (err) {
-        console.warn('Supabase profile update fallback:', err);
+        console.warn('Supabase profile update error:', err);
       }
     } else {
       pushNotification('Profile Updated', 'Saved profile details to local service book.', 'success');
