@@ -33,7 +33,7 @@ export const Navbar = () => {
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const dbStatus = getSupabaseStatus();
 
-  const displayName = currentUser?.full_name || (role === 'admin' ? 'SHUBHAM SHARADRAO ALAPURE' : activeTeacher.full_name || 'Faculty Member');
+  const displayName = currentUser?.full_name || activeTeacher.full_name || 'MIT-ADT Staff';
   const displayId = currentUser?.emp_id || activeTeacher.emp_id || 'MIT-USER-01';
   const userInitials = displayName.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 

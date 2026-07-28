@@ -50,8 +50,8 @@ export const OverviewDashboard = () => {
     currentUser 
   } = useApp();
 
-  const displayName = currentUser?.full_name || (role === 'admin' ? 'SHUBHAM SHARADRAO ALAPURE' : role === 'principal' ? 'Dr. Rajesh Kumar (School Dean)' : activeTeacher.full_name || 'Faculty Member');
-  const displayId = currentUser?.emp_id || (role === 'admin' ? 'MIT-MASTER-ADMIN-01' : role === 'principal' ? 'MIT-DEAN-2012-0056' : activeTeacher.emp_id || 'MIT-USER-01');
+  const displayName = currentUser?.full_name || activeTeacher.full_name || 'MIT-ADT Staff';
+  const displayId = currentUser?.emp_id || activeTeacher.emp_id || 'MIT-USER-01';
 
   const activeTransfersCount = transfers.length;
   const pendingLeavesCount = leaves.filter(l => l.status === 'Pending').length;

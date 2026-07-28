@@ -107,7 +107,7 @@ export const AppProvider = ({ children }) => {
         if (!adminExists || adminExists.length === 0) {
           await supabase.from('teachers').insert([{
             emp_id: 'MIT-MASTER-ADMIN-01',
-            full_name: 'SHUBHAM SHARADRAO ALAPURE',
+            full_name: 'MIT-ADT System Administrator',
             email: 'shubham.alapure@mituniversity.edu.in',
             joining_date: '2015-01-01',
             cadre: 'Principal',
@@ -164,12 +164,16 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // Current Active Teacher / Admin Profile based on persona role
+  // Priority: currentUser (logged-in) > role-based lookup > fallback
+  const resolvedName = currentUser?.full_name;
+  const resolvedEmail = currentUser?.email;
+
   const activeTeacher = role === 'admin'
     ? {
         id: 'admin-master',
         emp_id: 'MIT-MASTER-ADMIN-01',
-        full_name: 'SHUBHAM SHARADRAO ALAPURE',
-        email: 'shubham.alapure@mituniversity.edu.in',
+        full_name: 'MIT-ADT System Administrator',
+        email: 'admin@mituniversity.edu.in',
         phone: '+91 98765 00001',
         gender: 'Male',
         cadre: 'Master Administrator & VC Secretariat',
@@ -183,28 +187,60 @@ export const AppProvider = ({ children }) => {
         service_status: 'Active',
         qualification: 'Master Admin Access & Executive Authority'
       }
-    : (teachers && teachers.length > 0)
-      ? (role === 'principal' 
-          ? teachers.find(t => (t.cadre && (t.cadre.includes('Dean') || t.cadre.includes('Principal')))) || teachers[0]
-          : teachers[0])
-      : {
-          id: 'faculty-new',
-          emp_id: 'MIT-FAC-2026-0001',
-          full_name: 'Faculty Profile (No Data)',
-          email: 'faculty@mituniversity.edu.in',
-          phone: '-',
-          gender: 'N/A',
-          cadre: 'Assistant Professor',
-          subject: 'Department',
-          current_school: 'School of Engineering (SOE)',
-          district: 'Rajbaug Campus',
-          block: 'Loni Kalbhor',
-          seniority_rank: 1,
-          basic_pay: 57700,
-          gpf_nps_no: 'PF-MIT-NEW',
-          service_status: 'Active',
-          qualification: 'Ph.D.'
-        };
+    : role === 'principal'
+      ? teachers.find(t => t.cadre && (t.cadre.includes('Dean') || t.cadre.includes('Principal'))) || {
+          id: 'dean-01',
+          emp_id: 'MIT-DEAN-2012-0056',
+          full_name: 'Dr. Rajesh Kumar',
+          email: 'dean.soe@mituniversity.edu.in',
+          cadre: 'School Dean',
+          current_school: 'School of Engineering & Technology (SOE)',
+          service_status: 'Active'
+        }
+      : role === 'applicant'
+        // For applicant/candidate, ALWAYS use currentUser data
+        ? {
+            id: currentUser?.id || 'applicant-pending',
+            emp_id: currentUser?.emp_id || 'MIT-APP-PENDING',
+            full_name: resolvedName || 'Applicant',
+            email: resolvedEmail || '',
+            phone: currentUser?.phone || '-',
+            gender: currentUser?.gender || '-',
+            dob: currentUser?.dob || '-',
+            qualification: currentUser?.qualification || 'B.Ed / Ph.D.',
+            cadre: 'TGT',
+            subject: currentUser?.specialization || 'Applied Faculty',
+            current_school: 'School of Engineering & Technology (SOE)',
+            district: 'Rajbaug Campus',
+            block: 'Loni Kalbhor',
+            service_status: 'Active',
+            basic_pay: 57700,
+            seniority_rank: 99
+          }
+        : (teachers && teachers.length > 0)
+          // For teacher role, find by currentUser email/emp_id first, else teachers[0]
+          ? (resolvedEmail
+              ? teachers.find(t => t.email?.toLowerCase() === resolvedEmail.toLowerCase()) || teachers[0]
+              : teachers[0])
+          : {
+              id: 'faculty-new',
+              emp_id: 'MIT-FAC-2026-0001',
+              full_name: resolvedName || 'Faculty Member',
+              email: resolvedEmail || 'faculty@mituniversity.edu.in',
+              phone: '-',
+              gender: 'N/A',
+              cadre: 'Assistant Professor',
+              subject: 'Department',
+              current_school: 'School of Engineering (SOE)',
+              district: 'Rajbaug Campus',
+              block: 'Loni Kalbhor',
+              seniority_rank: 1,
+              basic_pay: 57700,
+              gpf_nps_no: 'PF-MIT-NEW',
+              service_status: 'Active',
+              qualification: 'Ph.D.'
+            };
+
 
   // Synchronize state changes to localStorage
   useEffect(() => {
@@ -717,14 +753,14 @@ export const AppProvider = ({ children }) => {
         };
       }
 
-      const adminUser = { full_name: 'SHUBHAM SHARADRAO ALAPURE', emp_id: 'MIT-MASTER-ADMIN-01', role: 'admin' };
+      const adminUser = { full_name: 'MIT-ADT System Administrator', emp_id: 'MIT-MASTER-ADMIN-01', role: 'admin' };
       setRole('admin');
       setIsAuthenticated(true);
       setCurrentUser(adminUser);
       localStorage.setItem('shikshak_current_user', JSON.stringify(adminUser));
       localStorage.setItem('shikshak_role', 'admin');
       localStorage.setItem('shikshak_authenticated', 'true');
-      pushNotification('Master Admin Access Granted', 'Logged in as SHUBHAM SHARADRAO ALAPURE', 'success');
+      pushNotification('Master Admin Access Granted', 'Logged in as MIT-ADT System Administrator', 'success');
       return { success: true };
     }
 

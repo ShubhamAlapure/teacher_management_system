@@ -183,7 +183,7 @@ export const LandingPage = ({ onOpenAuth }) => {
             </span>
             <h2 className="text-3xl font-black text-purple-950">Master Admin Control Center</h2>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Authorized personnel access assigned to University Master Administrator **SHUBHAM SHARADRAO ALAPURE**.
+              Authorized personnel access assigned to University Master Administrator — System Admin Office.
             </p>
           </div>
 
@@ -191,13 +191,13 @@ export const LandingPage = ({ onOpenAuth }) => {
           <div className="max-w-3xl mx-auto p-8 rounded-3xl bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-950 text-white shadow-xl border border-purple-700/50 flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-5">
               <div className="w-16 h-16 rounded-2xl bg-yellow-400 text-purple-950 flex items-center justify-center font-black text-xl shadow-lg border-2 border-white">
-                SA
+                AD
               </div>
               <div className="space-y-1">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-yellow-400/20 text-yellow-300 border border-yellow-400/40">
                   MASTER ADMINISTRATOR
                 </span>
-                <h3 className="text-xl font-extrabold">SHUBHAM SHARADRAO ALAPURE</h3>
+                <h3 className="text-xl font-extrabold">MIT-ADT System Administrator</h3>
                 <p className="text-xs text-purple-200">University Vice-Chancellor Office & Registrar Secretariat</p>
                 <p className="text-[11px] text-purple-300 font-mono">Master ID: MIT-MASTER-ADMIN-01</p>
               </div>
