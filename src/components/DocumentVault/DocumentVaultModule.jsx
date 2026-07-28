@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export const DocumentVaultModule = () => {
-  const { documents, uploadDocument, updateDocStatus, deleteDocument, role, activeTeacher } = useApp();
+  const { documents, uploadDocument, updateDocStatus, deleteDocument, role, activeTeacher, currentUser } = useApp();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedDocPreview, setSelectedDocPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -135,7 +135,7 @@ export const DocumentVaultModule = () => {
                 </div>
 
                 <div className="mt-3 p-2.5 rounded-xl bg-purple-50/50 border border-purple-100 text-[11px] text-slate-600 space-y-1">
-                  <p>Issued To: <strong className="text-slate-900">{doc.teacher_name || activeTeacher.full_name}</strong></p>
+                  <p>Issued To: <strong className="text-slate-900">{doc.teacher_name || (role === 'applicant' || role === 'teacher' ? (currentUser?.full_name || activeTeacher.full_name) : 'Faculty Member')}</strong></p>
                   <p>Verified By: <span className="text-purple-700 font-bold">{doc.verified_by || 'Pending Audit'}</span></p>
                   {src && src.startsWith('http') && (
                     <p className="text-emerald-700 font-bold flex items-center gap-1">

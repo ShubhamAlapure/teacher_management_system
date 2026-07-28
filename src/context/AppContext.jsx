@@ -166,7 +166,16 @@ export const AppProvider = ({ children }) => {
         if (apData && apData.length > 0) setApars(apData);
 
         const { data: dData } = await supabase.from('teacher_documents').select('*');
-        if (dData && dData.length > 0) setDocuments(dData);
+        if (dData && dData.length > 0) {
+          const docsWithNames = dData.map(doc => {
+            const matchedTeacher = (tData || []).find(t => t.id === doc.teacher_id || t.emp_id === doc.teacher_id);
+            return {
+              ...doc,
+              teacher_name: doc.teacher_name || matchedTeacher?.full_name || 'Faculty Member'
+            };
+          });
+          setDocuments(docsWithNames);
+        }
       } catch (err) {
         console.warn('Supabase fetch query fallback:', err);
       }
@@ -557,10 +566,13 @@ export const AppProvider = ({ children }) => {
     // Step 2: Fallback to Base64 Data URL for local preview if Storage failed
     const fileUrlToStore = publicUrl || docData.file_data || docData.file_name || 'document.pdf';
 
+    const uploaderName = docData.teacher_name || currentUser?.full_name || activeTeacher.full_name || 'Faculty Member';
+    const uploaderId = docData.teacher_id || currentUser?.emp_id || activeTeacher.id;
+
     const newDoc = {
       id: `doc-${Date.now()}`,
-      teacher_id: activeTeacher.id,
-      teacher_name: activeTeacher.full_name,
+      teacher_id: uploaderId,
+      teacher_name: uploaderName,
       status: 'Pending',
       verified_by: 'Pending Audit',
       uploaded_at: new Date().toISOString().split('T')[0],
