@@ -590,19 +590,33 @@ export const AppProvider = ({ children }) => {
       };
     }
 
-    // STRICT PASSWORD VERIFICATION
-    const expectedPassword = dbTeacherRecord.password || 'admin@123';
-    if (trimmedPass !== expectedPassword && trimmedPass !== 'admin@123') {
-      return { 
-        success: false, 
-        message: `Access Denied: Incorrect security password for User ID "${trimmedId}".` 
+    // STRICT ROLE AUTHORIZATION GUARD
+    let actualRole = 'teacher';
+    if (dbTeacherRecord.emp_id.startsWith('MIT-APP-') || dbTeacherRecord.cadre === 'Applicant') {
+      actualRole = 'applicant';
+    } else if (dbTeacherRecord.emp_id.startsWith('MIT-DEAN-') || dbTeacherRecord.cadre === 'Dean' || dbTeacherRecord.cadre === 'Principal' || dbTeacherRecord.cadre === 'Headmaster') {
+      actualRole = 'principal';
+    } else if (dbTeacherRecord.emp_id === 'MIT-MASTER-ADMIN-01') {
+      actualRole = 'admin';
+    }
+
+    if (roleId !== actualRole) {
+      const roleLabels = {
+        applicant: 'Faculty / Scholar Applicant',
+        teacher: 'Faculty Member',
+        principal: 'Head of Department (HOD) / Dean',
+        admin: 'Master Admin'
+      };
+      return {
+        success: false,
+        message: `Role Mismatch Alert: User ID "${trimmedId}" belongs to a ${roleLabels[actualRole]} account. You cannot sign in under ${roleLabels[roleId]} persona. Please select ${roleLabels[actualRole]}.`
       };
     }
 
     const userInfo = {
       full_name: dbTeacherRecord.full_name || userFullName || 'Faculty Member',
       emp_id: dbTeacherRecord.emp_id,
-      role: roleId
+      role: actualRole
     };
 
     setRole(roleId);
