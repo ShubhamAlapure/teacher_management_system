@@ -574,7 +574,7 @@ export const AppProvider = ({ children }) => {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('teachers').insert([{
+        const { data, error } = await supabase.from('teachers').insert([{
           emp_id: userData.emp_id,
           full_name: userData.full_name,
           email: userData.email,
@@ -585,14 +585,20 @@ export const AppProvider = ({ children }) => {
           block: 'Loni Kalbhor',
           gpf_nps_no: newTeacher.gpf_nps_no,
           service_status: 'Active'
-        }]);
+        }]).select();
+
+        if (error) {
+          console.error('Supabase DB registration insert error:', error.message);
+          pushNotification('Supabase Registration Alert', `DB Note: ${error.message}`, 'warning');
+        } else {
+          pushNotification('Supabase Sync Success', `Stored ${userData.full_name} (${userData.emp_id}) in Live PostgreSQL DB!`, 'success');
+        }
       } catch (err) {
-        console.error('Supabase user registration insert error:', err);
+        console.error('Supabase registration error:', err);
       }
     }
 
     login(userData.role, userData.emp_id, userData.full_name);
-    pushNotification('User Registered in DB', `User ${userData.full_name} (${userData.emp_id}) saved to database.`, 'success');
   };
 
   const logout = () => {
