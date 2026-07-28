@@ -13,7 +13,8 @@ import {
   Mail,
   UserPlus,
   LogIn,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
 
 export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
@@ -66,6 +67,15 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
 
   const handleRoleSelect = (roleId) => {
     setSelectedRole(roleId);
+    setAuthError('');
+  };
+
+  const handleModeSwitch = (mode) => {
+    setAuthMode(mode);
+    setAuthError('');
+    if (mode === 'signup') {
+      setSelectedRole('applicant'); // Strictly lock new registrations to Faculty / Scholar Applicant
+    }
   };
 
   const handleFillDemoCredentials = () => {
@@ -97,16 +107,14 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
       return;
     }
 
-    const generatedId = selectedRole === 'applicant' 
-      ? `MIT-APP-${Date.now().toString().slice(-4)}`
-      : `MIT-FAC-${Date.now().toString().slice(-4)}`;
+    const generatedId = `MIT-APP-${Date.now().toString().slice(-4)}`;
 
     registerUser({
       emp_id: generatedId,
       full_name: fullName,
       email: email,
       password: signupPassword,
-      role: selectedRole
+      role: 'applicant' // Explicitly set to applicant
     });
   };
 
@@ -167,15 +175,15 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
             </div>
           </div>
 
-          {/* Right Form & Persona Selector */}
+          {/* Right Form */}
           <div className="md:col-span-7 p-6 sm:p-8 space-y-6">
             
-            {/* Mode Switcher Tabs (Sign In / Register New Account) */}
+            {/* Mode Switcher Tabs (Sign In / Create New Account) */}
             <div className="flex items-center justify-between border-b border-purple-100 pb-3">
               <div className="flex items-center gap-2 bg-purple-50 p-1 rounded-2xl border border-purple-100">
                 <button
                   type="button"
-                  onClick={() => setAuthMode('signin')}
+                  onClick={() => handleModeSwitch('signin')}
                   className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
                     authMode === 'signin'
                       ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
@@ -188,7 +196,7 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
 
                 <button
                   type="button"
-                  onClick={() => setAuthMode('signup')}
+                  onClick={() => handleModeSwitch('signup')}
                   className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
                     authMode === 'signup'
                       ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
@@ -212,40 +220,60 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
               )}
             </div>
 
-            {/* Persona Cards */}
-            <div>
-              <p className="text-xs font-extrabold text-purple-950 mb-2">Select Persona Scope:</p>
-              <div className="grid grid-cols-2 gap-2.5">
-                {roles.map((r) => {
-                  const IconComp = r.icon;
-                  const isSelected = selectedRole === r.id;
+            {/* SIGN IN MODE: Persona Selector */}
+            {authMode === 'signin' ? (
+              <div>
+                <p className="text-xs font-extrabold text-purple-950 mb-2">Select Persona Scope:</p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {roles.map((r) => {
+                    const IconComp = r.icon;
+                    const isSelected = selectedRole === r.id;
 
-                  return (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => handleRoleSelect(r.id)}
-                      className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between ${
-                        isSelected
-                          ? 'bg-purple-100/90 border-purple-600 ring-2 ring-purple-600/30 text-purple-950 font-bold shadow-sm'
-                          : 'bg-purple-50/40 border-purple-100 hover:bg-purple-50 hover:border-purple-300 text-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className={`p-1.5 rounded-xl ${isSelected ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'}`}>
-                          <IconComp className="w-3.5 h-3.5" />
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => handleRoleSelect(r.id)}
+                        className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-purple-100/90 border-purple-600 ring-2 ring-purple-600/30 text-purple-950 font-bold shadow-sm'
+                            : 'bg-purple-50/40 border-purple-100 hover:bg-purple-50 hover:border-purple-300 text-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className={`p-1.5 rounded-xl ${isSelected ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'}`}>
+                            <IconComp className="w-3.5 h-3.5" />
+                          </div>
+                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />}
                         </div>
-                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />}
-                      </div>
 
-                      <div className="mt-1.5">
-                        <p className="text-[11px] font-extrabold leading-snug">{r.title}</p>
-                      </div>
-                    </button>
-                  );
-                })}
+                        <div className="mt-1.5">
+                          <p className="text-[11px] font-extrabold leading-snug">{r.title}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            ) : (
+              /* SIGN UP MODE: Locked to Faculty / Scholar Applicant ONLY */
+              <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-purple-950 flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-purple-600 text-white shrink-0">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-black uppercase tracking-wide">Faculty / Scholar Applicant Registration</p>
+                    <span className="px-2 py-0.5 rounded-md bg-purple-200 text-purple-900 text-[10px] font-mono font-bold flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5" /> Fixed Role
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Self-registration creates a new Faculty & Research Scholar Applicant profile.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Form Mode 1: SIGN IN */}
             {authMode === 'signin' ? (
@@ -367,7 +395,7 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
                   className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold shadow-lg shadow-purple-600/30 transition-all uppercase tracking-wider flex items-center justify-center gap-2 mt-2"
                 >
                   <UserPlus className="w-4 h-4" />
-                  <span>Register New Account & Sign In</span>
+                  <span>Register Applicant Account & Sign In</span>
                 </button>
               </form>
             )}
