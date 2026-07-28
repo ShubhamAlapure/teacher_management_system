@@ -9,14 +9,16 @@ import {
   Printer,
   ShieldCheck,
   AlertCircle,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
 
 export const DocumentVaultModule = () => {
-  const { documents, uploadDocument, updateDocStatus, role, activeTeacher } = useApp();
+  const { documents, uploadDocument, updateDocStatus, deleteDocument, role, activeTeacher } = useApp();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedDocPreview, setSelectedDocPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [confirmDeleteDoc, setConfirmDeleteDoc] = useState(null); // doc to confirm deletion
 
   const [docForm, setDocForm] = useState({
     doc_name: '',
@@ -165,11 +167,68 @@ export const DocumentVaultModule = () => {
                     Verify
                   </button>
                 )}
+
+                {/* DELETE — only for candidate/applicant on their own Pending docs */}
+                {(role === 'applicant' || role === 'teacher') && doc.status !== 'Verified' && (
+                  <button
+                    onClick={() => setConfirmDeleteDoc(doc)}
+                    className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-all"
+                    title="Delete this document"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      {confirmDeleteDoc && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 font-sans">
+          <div className="w-full max-w-sm bg-white border border-rose-200 rounded-3xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h4 className="text-sm font-extrabold text-slate-900">Delete Document?</h4>
+                <p className="text-xs text-slate-500 mt-0.5">This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-0.5">
+              <p><span className="text-slate-400">Document:</span> <strong>{confirmDeleteDoc.doc_name}</strong></p>
+              <p><span className="text-slate-400">Category:</span> {confirmDeleteDoc.doc_category}</p>
+              <p><span className="text-slate-400">Status:</span> <span className="text-amber-700 font-bold">{confirmDeleteDoc.status}</span></p>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              The file will be removed from the Vault and deleted from Supabase Storage permanently.
+            </p>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setConfirmDeleteDoc(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await deleteDocument(confirmDeleteDoc);
+                  setConfirmDeleteDoc(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-md shadow-rose-600/20 flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Upload Modal */}
       {isUploadModalOpen && (

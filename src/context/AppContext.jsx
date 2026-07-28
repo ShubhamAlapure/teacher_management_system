@@ -562,7 +562,32 @@ export const AppProvider = ({ children }) => {
     pushNotification('Document Verified', `Document status updated to ${status}.`, 'success');
   };
 
-  // 11. Update Shortlisted Applicant Profile
+  // 11. Delete Document (Candidate only, Pending docs)
+  const deleteDocument = async (doc) => {
+    // Remove from local state immediately
+    setDocuments(prev => prev.filter(d => d.id !== doc.id));
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        // 1. Delete from teacher_documents table (try both UUID and string id)
+        await supabase.from('teacher_documents').delete().eq('id', doc.id);
+
+        // 2. If file was in Supabase Storage (URL contains supabase.co/storage), delete file too
+        if (doc.file_url && doc.file_url.includes('/storage/v1/object/public/teacher-docs/')) {
+          const filePath = doc.file_url.split('/storage/v1/object/public/teacher-docs/')[1];
+          if (filePath) {
+            await supabase.storage.from('teacher-docs').remove([filePath]);
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase doc delete error:', err);
+      }
+    }
+
+    pushNotification('Document Removed', `"${doc.doc_name}" deleted from vault.`, 'info');
+  };
+
+
   const updateApplicantProfile = async (empId, profileDetails) => {
     const targetEmail = profileDetails.email || currentUser?.email || 'shubhamreddy5003@gmail.com';
     const targetId = empId || currentUser?.emp_id || 'MIT-APP-4616';
@@ -921,6 +946,7 @@ export const AppProvider = ({ children }) => {
         updateAparReview,
         uploadDocument,
         updateDocStatus,
+        deleteDocument,
         updateApplicantProfile,
         enrollCourse,
         resetToDemoData,
