@@ -1,5 +1,4 @@
 {
-  "name": "teacher-management-system",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
