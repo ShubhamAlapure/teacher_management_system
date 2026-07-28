@@ -7,7 +7,9 @@ import {
   ShieldCheck, 
   Printer,
   CheckCircle2,
-  Award
+  Award,
+  UserCheck,
+  Building
 } from 'lucide-react';
 
 export const ServiceBookModule = () => {
@@ -15,6 +17,7 @@ export const ServiceBookModule = () => {
   const [selectedTeacherId, setSelectedTeacherId] = useState(activeTeacher.id);
 
   const teacher = teachers.find(t => t.id === selectedTeacherId) || activeTeacher;
+  const isApplicant = teacher.emp_id?.startsWith('MIT-APP-') || teacher.cadre === 'Applicant';
 
   const handlePrint = () => {
     window.print();
@@ -36,15 +39,15 @@ export const ServiceBookModule = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {(role === 'admin' || role === 'principal') && (
+          {(role === 'admin' || role === 'principal') && teachers.length > 0 && (
             <select
               value={selectedTeacherId}
               onChange={(e) => setSelectedTeacherId(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 bg-white"
+              className="px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 bg-white shadow-sm"
             >
               {teachers.map(t => (
                 <option key={t.id} value={t.id}>
-                  {t.full_name} ({t.emp_id}) - {t.cadre}
+                  {t.full_name} ({t.emp_id}) - {t.emp_id.startsWith('MIT-APP-') ? 'Applicant' : t.cadre}
                 </option>
               ))}
             </select>
@@ -63,7 +66,7 @@ export const ServiceBookModule = () => {
       {/* Main Service Book Card */}
       <div className="bg-white rounded-2xl border border-purple-100 p-6 md:p-8 space-y-6 shadow-sm">
         
-        {/* Top Header Seals with MIT-ADT Logo */}
+        {/* Header Seals */}
         <div className="border-b border-purple-100 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-6">
             <MitAdtLogo variant="light" />
@@ -74,14 +77,14 @@ export const ServiceBookModule = () => {
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-extrabold text-slate-900">{teacher.full_name}</h3>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-purple-100 text-purple-900 border border-purple-200">
-                  {teacher.cadre} Cadre
+                  {isApplicant ? 'Faculty Applicant' : `${teacher.cadre || 'Assistant Professor'}`}
                 </span>
               </div>
               <p className="text-xs text-slate-600 mt-1 font-mono">
-                Faculty ID: <span className="text-purple-700 font-extrabold">{teacher.emp_id}</span> &bull; {teacher.gpf_nps_no}
+                ID: <span className="text-purple-700 font-extrabold">{teacher.emp_id}</span> &bull; {teacher.gpf_nps_no || 'PF-MIT-PENDING'}
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
-                {teacher.qualification}
+                Qualification: {teacher.qualification || 'Ph.D. / M.Tech'}
               </p>
             </div>
           </div>
@@ -89,10 +92,14 @@ export const ServiceBookModule = () => {
           <div className="text-left md:text-right bg-purple-50 p-4 rounded-2xl border border-purple-100 shrink-0">
             <div className="flex items-center gap-2 md:justify-end text-xs text-purple-900 font-extrabold">
               <ShieldCheck className="w-4 h-4 text-purple-600" />
-              MIT-ADT Verified Service Book
+              {isApplicant ? 'Recruitment Profile Active' : 'MIT-ADT Verified Service Book'}
             </div>
-            <p className="text-[11px] text-slate-600 mt-1">Faculty Rank: <strong className="text-purple-900">#{teacher.seniority_rank}</strong></p>
-            <p className="text-[11px] text-slate-600">TET / Score: <strong className="text-emerald-700">{teacher.tet_score} / 150</strong> (Qualified)</p>
+            <p className="text-[11px] text-slate-600 mt-1">
+              Category: <strong className="text-purple-900">{isApplicant ? 'Job Applicant' : 'Regular Permanent Faculty'}</strong>
+            </p>
+            <p className="text-[11px] text-slate-600">
+              Service Status: <strong className="text-emerald-700">{teacher.service_status || 'Active'}</strong>
+            </p>
           </div>
         </div>
 
@@ -100,22 +107,22 @@ export const ServiceBookModule = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 rounded-xl bg-purple-50/50 border border-purple-100">
             <p className="text-[11px] text-slate-500 font-bold uppercase">Subject Specialization</p>
-            <p className="text-sm font-extrabold text-purple-950 mt-1">{teacher.subject}</p>
+            <p className="text-sm font-extrabold text-purple-950 mt-1">{teacher.subject || 'Computer Engineering'}</p>
           </div>
 
           <div className="p-4 rounded-xl bg-purple-50/50 border border-purple-100">
             <p className="text-[11px] text-slate-500 font-bold uppercase">Department / School</p>
-            <p className="text-xs font-extrabold text-slate-900 mt-1 line-clamp-2">{teacher.current_school}</p>
+            <p className="text-xs font-extrabold text-slate-900 mt-1 line-clamp-2">{teacher.current_school || 'School of Engineering & Technology (SOE)'}</p>
           </div>
 
           <div className="p-4 rounded-xl bg-purple-50/50 border border-purple-100">
-            <p className="text-[11px] text-slate-500 font-bold uppercase">Campus & District</p>
-            <p className="text-sm font-extrabold text-slate-900 mt-1">{teacher.district} ({teacher.block})</p>
+            <p className="text-[11px] text-slate-500 font-bold uppercase">Campus Location</p>
+            <p className="text-sm font-extrabold text-slate-900 mt-1">{teacher.district || 'Rajbaug Campus'} ({teacher.block || 'Loni Kalbhor'})</p>
           </div>
 
           <div className="p-4 rounded-xl bg-purple-50/50 border border-purple-100">
-            <p className="text-[11px] text-slate-500 font-bold uppercase">Joining Date</p>
-            <p className="text-sm font-extrabold text-purple-700 mt-1">{teacher.joining_date}</p>
+            <p className="text-[11px] text-slate-500 font-bold uppercase">Registration / Joining Date</p>
+            <p className="text-sm font-extrabold text-purple-700 mt-1">{teacher.joining_date || new Date().toISOString().split('T')[0]}</p>
           </div>
         </div>
 
@@ -131,39 +138,23 @@ export const ServiceBookModule = () => {
               <span className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-purple-600 border-4 border-white shadow-md" />
               <div className="p-4 rounded-xl bg-purple-50/60 border border-purple-100 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-purple-900">2021 - Present</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] bg-purple-600 text-white font-bold">Current Designation</span>
+                  <span className="text-xs font-extrabold text-purple-900">
+                    {teacher.joining_date || '2026'} - Present
+                  </span>
+                  <span className="px-2 py-0.5 rounded text-[10px] bg-purple-600 text-white font-bold">
+                    {isApplicant ? 'Submitted Application' : 'Current Appointment'}
+                  </span>
                 </div>
-                <h5 className="text-sm font-extrabold text-slate-900">{teacher.current_school}</h5>
-                <p className="text-xs text-slate-600">Department: {teacher.district} &bull; Cadre: {teacher.cadre} ({teacher.subject})</p>
-                <p className="text-xs text-purple-900 font-bold mt-1">Pay Matrix: Level 7 (Basic Pay ₹{teacher.basic_pay.toLocaleString()})</p>
-              </div>
-            </div>
-
-            <div className="relative pl-6">
-              <span className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-blue-500 border-4 border-white shadow-md" />
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-blue-900">2018 - 2021</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] bg-blue-100 text-blue-900 font-bold">Previous Appointment</span>
-                </div>
-                <h5 className="text-sm font-extrabold text-slate-900">MIT School of Engineering & Technology</h5>
-                <p className="text-xs text-slate-600">Department: Mathematics & Foundation</p>
+                <h5 className="text-sm font-extrabold text-slate-900">{teacher.current_school || 'School of Engineering & Technology (SOE)'}</h5>
+                <p className="text-xs text-slate-600">
+                  Campus: {teacher.district || 'Rajbaug Campus'} &bull; Cadre: {isApplicant ? 'Faculty Applicant' : (teacher.cadre || 'Assistant Professor')}
+                </p>
+                <p className="text-xs text-purple-900 font-bold mt-1">
+                  {isApplicant ? 'Status: Under Selection Committee Review' : `Pay Matrix: Level 10 (Basic Pay ₹${(teacher.basic_pay || 57700).toLocaleString()})`}
+                </p>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Verification Footer Seal */}
-        <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-purple-700 shrink-0" />
-            <div>
-              <p className="text-xs font-extrabold text-purple-950">MIT-ADT University Registrar Digital Seal</p>
-              <p className="text-[11px] text-slate-600">Cryptographically verified by MIT-ADT University Pune, India.</p>
-            </div>
-          </div>
-          <span className="text-[10px] font-mono text-purple-900 font-bold hidden sm:block">MIT-ADT-VERIFIED-2026</span>
         </div>
 
       </div>

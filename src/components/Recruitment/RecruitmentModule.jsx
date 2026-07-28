@@ -11,7 +11,8 @@ import {
   Award, 
   Building,
   Calendar,
-  X
+  X,
+  PlusCircle
 } from 'lucide-react';
 
 export const RecruitmentModule = () => {
@@ -20,21 +21,36 @@ export const RecruitmentModule = () => {
     applications, 
     addApplication, 
     updateApplicationStatus, 
-    role 
+    role,
+    pushNotification,
+    isSupabaseConfigured,
+    supabase
   } = useApp();
 
   const [selectedVacancy, setSelectedVacancy] = useState(null);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [isAddDriveModalOpen, setIsAddDriveModalOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('All');
 
-  // Form State
+  // Form State for Applicant
   const [formData, setFormData] = useState({
     applicant_name: '',
     email: '',
     phone: '',
     ctet_score: '',
     bed_percentage: '',
-    preferred_district: 'Patna'
+    preferred_district: 'Rajbaug Campus'
+  });
+
+  // Form State for Posting New Drive
+  const [driveForm, setDriveForm] = useState({
+    drive_code: `MIT-SOE-${Date.now().toString().slice(-4)}`,
+    cadre: 'Assistant Professor',
+    subject: 'Computer Science & Engineering (AI/ML)',
+    department: 'School of Engineering & Technology (SOE)',
+    total_posts: 4,
+    basic_pay: 57700,
+    deadline: '2026-09-30'
   });
 
   const handleApplyClick = (vacancy) => {
@@ -45,32 +61,102 @@ export const RecruitmentModule = () => {
       phone: '',
       ctet_score: '',
       bed_percentage: '',
-      preferred_district: vacancy.district
+      preferred_district: vacancy?.district || 'Rajbaug Campus'
     });
     setIsApplyModalOpen(true);
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    if (!formData.applicant_name || !formData.ctet_score || !formData.bed_percentage) return;
+    if (!formData.applicant_name) return;
 
     addApplication({
-      vacancy_id: selectedVacancy.id,
-      drive_code: selectedVacancy.drive_code,
+      vacancy_id: selectedVacancy?.id || `vac-${Date.now()}`,
+      drive_code: selectedVacancy?.drive_code || 'MIT-DRIVE-2026',
       applicant_name: formData.applicant_name,
       email: formData.email,
       phone: formData.phone,
-      ctet_score: Number(formData.ctet_score),
-      bed_percentage: Number(formData.bed_percentage),
+      ctet_score: Number(formData.ctet_score || 120),
+      bed_percentage: Number(formData.bed_percentage || 85),
       preferred_district: formData.preferred_district
     });
 
     setIsApplyModalOpen(false);
   };
 
+  const handleDriveSubmit = async (e) => {
+    e.preventDefault();
+    if (!driveForm.drive_code || !driveForm.subject) return;
+
+    const newDrive = {
+      id: `vac-${Date.now()}`,
+      drive_code: driveForm.drive_code,
+      cadre: driveForm.cadre,
+      subject: driveForm.subject,
+      district: driveForm.department,
+      total_posts: Number(driveForm.total_posts),
+      status: 'Open',
+      deadline: driveForm.deadline,
+      created_at: new Date().toISOString().split('T')[0]
+    };
+
+    vacancies.unshift(newDrive);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('recruitment_vacancies').insert([{
+          drive_code: driveForm.drive_code,
+          cadre: driveForm.cadre,
+          subject: driveForm.subject,
+          district: driveForm.department,
+          total_posts: Number(driveForm.total_posts),
+          status: 'Open'
+        }]);
+      } catch (err) {
+        console.warn('Supabase vacancy insert fallback:', err);
+      }
+    }
+
+    pushNotification('Recruitment Drive Posted', `Published Faculty Drive ${driveForm.drive_code} for ${driveForm.subject}.`, 'success');
+    setIsAddDriveModalOpen(false);
+  };
+
   const filteredApplications = filterStatus === 'All' 
     ? applications 
     : applications.filter(a => a.status === filterStatus);
+
+  const sampleDrives = vacancies.length > 0 ? vacancies : [
+    {
+      id: 'vac-1',
+      drive_code: 'MIT-SOE-2026-01',
+      cadre: 'Assistant Professor',
+      subject: 'Computer Science & Artificial Intelligence',
+      district: 'School of Engineering & Technology (SOE)',
+      total_posts: 5,
+      status: 'Open',
+      deadline: '2026-09-30'
+    },
+    {
+      id: 'vac-2',
+      drive_code: 'MIT-SOE-2026-02',
+      cadre: 'Associate Professor',
+      subject: 'Data Science & Machine Learning',
+      district: 'School of Engineering & Technology (SOE)',
+      total_posts: 3,
+      status: 'Open',
+      deadline: '2026-09-30'
+    },
+    {
+      id: 'vac-3',
+      drive_code: 'MIT-MANET-2026-03',
+      cadre: 'Assistant Professor',
+      subject: 'Marine Engineering & Nautical Science',
+      district: 'MANET Rajbaug Campus',
+      total_posts: 2,
+      status: 'Open',
+      deadline: '2026-10-15'
+    }
+  ];
 
   return (
     <div className="space-y-6 font-sans">
@@ -90,65 +176,51 @@ export const RecruitmentModule = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {(role === 'admin' || role === 'principal') && (
+            <button
+              onClick={() => setIsAddDriveModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold transition-all shadow-md shadow-purple-600/20 flex items-center gap-2"
+            >
+              <PlusCircle className="w-4 h-4" />
+              Post New Vacancy Drive
+            </button>
+          )}
+
           <div className="px-4 py-2 rounded-xl bg-purple-50 text-xs text-purple-900 font-bold border border-purple-100">
-            Active Drives: {vacancies.length}
-          </div>
-          <div className="px-4 py-2 rounded-xl bg-purple-100 text-xs text-purple-900 font-extrabold border border-purple-200">
-            Applications: {applications.length}
+            Active Drives: {sampleDrives.length}
           </div>
         </div>
       </div>
 
-      {/* Vacancy Openings Cards */}
-      <div>
-        <h3 className="text-sm font-extrabold text-purple-950 mb-3 flex items-center gap-2">
+      {/* Active Faculty Drives Grid */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-extrabold text-purple-950 flex items-center gap-2">
           <Briefcase className="w-4 h-4 text-purple-600" />
-          Active MIT-ADT University Faculty Drives 2026
+          Active MIT-ADT University Faculty Recruitment Drives 2026
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {vacancies.map((vac) => (
-            <div 
-              key={vac.id}
-              className="p-5 rounded-2xl bg-white border border-purple-100 shadow-sm hover:border-purple-300 transition-all flex flex-col justify-between"
-            >
+          {sampleDrives.map(drive => (
+            <div key={drive.id} className="p-5 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-3 hover:border-purple-300 transition-all flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-100 text-purple-900 font-bold">
-                    {vac.drive_code}
+                <div className="flex items-center justify-between">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-900 border border-purple-200">
+                    {drive.drive_code}
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-900">
-                    {vac.cadre}
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                    {drive.total_posts} Vacancies
                   </span>
                 </div>
-
-                <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{vac.title}</h4>
-
-                <div className="mt-3 space-y-1.5 text-xs text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <Building className="w-3.5 h-3.5 text-purple-500" />
-                    <span>School: <strong className="text-slate-900">{vac.district}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Award className="w-3.5 h-3.5 text-purple-500" />
-                    <span>Requirement: {vac.min_qualification}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5 text-purple-500" />
-                    <span>Deadline: {vac.application_deadline}</span>
-                  </div>
-                </div>
+                <h4 className="text-sm font-extrabold text-purple-950 mt-2">{drive.cadre}</h4>
+                <p className="text-xs text-slate-600 font-medium">{drive.subject}</p>
+                <p className="text-[11px] text-slate-500 mt-1">{drive.district}</p>
               </div>
 
-              <div className="mt-5 pt-3 border-t border-purple-100 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] text-slate-400">Total Posts</p>
-                  <p className="text-xs font-bold text-slate-900">{vac.filled_posts} / {vac.total_posts} Filled</p>
-                </div>
-
+              <div className="pt-3 border-t border-purple-100 flex items-center justify-between">
+                <span className="text-[10px] text-slate-400">Deadline: {drive.deadline || '2026-09-30'}</span>
                 <button
-                  onClick={() => handleApplyClick(vac)}
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold shadow-md shadow-purple-600/20 transition-all"
+                  onClick={() => handleApplyClick(drive)}
+                  className="px-3 py-1 rounded-lg bg-purple-600 text-white text-xs font-bold hover:bg-purple-700 transition-all"
                 >
                   Apply Now
                 </button>
@@ -158,217 +230,262 @@ export const RecruitmentModule = () => {
         </div>
       </div>
 
-      {/* Applications Management Table */}
+      {/* Applications Table */}
       <div className="p-5 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-100 pb-3">
           <div>
             <h3 className="text-sm font-extrabold text-purple-950 flex items-center gap-2">
               <UserPlus className="w-4 h-4 text-purple-600" />
-              Candidate Applications & Merit Index
+              Candidate Applications & Selection Index
             </h3>
-            <p className="text-xs text-slate-500">Merit Index = (CTET Score/150 &times; 50) + (B.Ed % &times; 0.5)</p>
+            <p className="text-[11px] text-slate-500">
+              Selection Index = (API Research Score &times; 0.6) + (Interview Grade &times; 0.4)
+            </p>
           </div>
 
-          {/* Status Filter */}
           <div className="flex items-center gap-2">
             <Filter className="w-3.5 h-3.5 text-purple-600" />
-            <span className="text-xs font-bold text-slate-600">Filter:</span>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-purple-200 text-xs text-slate-800 bg-white"
+              className="px-3 py-1.5 rounded-xl border border-purple-200 text-xs text-slate-900 bg-white"
             >
               <option value="All">All Statuses</option>
               <option value="Submitted">Submitted</option>
-              <option value="Document Verification">Document Verification</option>
               <option value="Shortlisted">Shortlisted</option>
-              <option value="Merit List">Merit List</option>
+              <option value="Appointed">Appointed</option>
+              <option value="Rejected">Rejected</option>
             </select>
           </div>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-purple-50 text-purple-950 border-b border-purple-100 font-extrabold uppercase text-[10px] tracking-wider">
+            <thead className="bg-purple-50 text-purple-950 border-b border-purple-100 font-extrabold uppercase text-[10px]">
               <tr>
                 <th className="p-3">Applicant Name</th>
                 <th className="p-3">Drive Code</th>
-                <th className="p-3">CTET Score</th>
-                <th className="p-3">B.Ed Marks</th>
-                <th className="p-3">Merit Index</th>
-                <th className="p-3">District</th>
+                <th className="p-3">Applied Post / Department</th>
                 <th className="p-3">Status</th>
                 <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-purple-100 text-slate-700">
-              {filteredApplications.map((app) => {
-                const meritIndex = ((app.ctet_score / 150) * 50 + app.bed_percentage * 0.5).toFixed(1);
-
-                return (
-                  <tr key={app.id} className="hover:bg-purple-50/50 transition-all">
+              {filteredApplications.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-slate-400 italic">
+                    No recruitment applications registered yet. Click "Apply Now" or "Post New Vacancy Drive".
+                  </td>
+                </tr>
+              ) : (
+                filteredApplications.map((app) => (
+                  <tr key={app.id} className="hover:bg-purple-50/50">
                     <td className="p-3">
                       <p className="font-extrabold text-slate-900">{app.applicant_name}</p>
-                      <p className="text-[10px] text-slate-500">{app.email}</p>
+                      <p className="text-[11px] text-slate-500">{app.email}</p>
                     </td>
-                    <td className="p-3 font-mono text-purple-900 font-bold">{app.drive_code}</td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-extrabold">
-                        {app.ctet_score} / 150
-                      </span>
-                    </td>
-                    <td className="p-3 font-semibold text-slate-800">{app.bed_percentage}%</td>
-                    <td className="p-3">
-                      <span className="px-2.5 py-0.5 rounded-full font-extrabold bg-purple-100 text-purple-900 border border-purple-200">
-                        {meritIndex} pts
-                      </span>
-                    </td>
-                    <td className="p-3 text-slate-700 font-medium">{app.preferred_district}</td>
+                    <td className="p-3 text-purple-900 font-bold font-mono">{app.drive_code || 'MIT-SOE-2026'}</td>
+                    <td className="p-3 text-slate-600">{app.applied_post || 'Assistant Professor (SOE)'}</td>
                     <td className="p-3">
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                        app.status === 'Merit List' ? 'bg-purple-600 text-white' :
-                        app.status === 'Shortlisted' ? 'bg-purple-100 text-purple-900 border border-purple-300' :
-                        app.status === 'Document Verification' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
-                        'bg-slate-100 text-slate-700'
+                        app.status === 'Appointed' ? 'bg-emerald-100 text-emerald-900' :
+                        app.status === 'Shortlisted' ? 'bg-purple-100 text-purple-900' :
+                        app.status === 'Rejected' ? 'bg-rose-100 text-rose-900' :
+                        'bg-amber-100 text-amber-900'
                       }`}>
                         {app.status}
                       </span>
                     </td>
                     <td className="p-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => updateApplicationStatus(app.id, 'Document Verification', 'Verified CTET & Marks')}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[10px] text-slate-800 font-bold transition-all"
-                        >
-                          Verify
-                        </button>
-                        <button
-                          onClick={() => updateApplicationStatus(app.id, 'Merit List', 'Ranked in District Merit List')}
-                          className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-extrabold transition-all"
-                        >
-                          Shortlist
-                        </button>
-                      </div>
+                      {(role === 'principal' || role === 'admin') && app.status === 'Submitted' && (
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => updateApplicationStatus(app.id, 'Shortlisted')}
+                            className="px-2 py-1 rounded bg-purple-600 text-white text-[10px] font-extrabold"
+                          >
+                            Shortlist (HOD)
+                          </button>
+                          <button
+                            onClick={() => updateApplicationStatus(app.id, 'Rejected')}
+                            className="px-2 py-1 rounded bg-rose-100 text-rose-900 text-[10px] font-bold"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
-                );
-              })}
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Application Form Modal */}
-      {isApplyModalOpen && selectedVacancy && (
-        <div className="fixed inset-0 z-50 bg-purple-950/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white border border-purple-100 rounded-3xl p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
+      {/* MODAL: Post New Vacancy Drive */}
+      {isAddDriveModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-purple-100 animate-in fade-in">
             <div className="flex items-center justify-between border-b border-purple-100 pb-3">
-              <div>
-                <h3 className="text-base font-extrabold text-purple-950">Teacher Application Form</h3>
-                <p className="text-xs text-slate-500">{selectedVacancy.title}</p>
-              </div>
-              <button 
-                onClick={() => setIsApplyModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-              >
+              <h3 className="text-base font-extrabold text-purple-950">Post New Faculty Recruitment Drive</h3>
+              <button onClick={() => setIsAddDriveModalOpen(false)} className="p-1 rounded-full text-slate-400 hover:bg-slate-100">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleFormSubmit} className="space-y-3">
+            <form onSubmit={handleDriveSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="text-xs font-bold text-slate-700">Full Name of Applicant</label>
-                <input
-                  type="text"
+                <label className="font-bold text-slate-700 block mb-1">Drive Code</label>
+                <input 
+                  type="text" 
+                  value={driveForm.drive_code}
+                  onChange={(e) => setDriveForm({...driveForm, drive_code: e.target.value})}
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
-                  placeholder="e.g. Amitabh Sen"
-                  value={formData.applicant_name}
-                  onChange={(e) => setFormData({ ...formData, applicant_name: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Faculty Designation / Cadre</label>
+                <select 
+                  value={driveForm.cadre}
+                  onChange={(e) => setDriveForm({...driveForm, cadre: e.target.value})}
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="Assistant Professor">Assistant Professor</option>
+                  <option value="Associate Professor">Associate Professor</option>
+                  <option value="Professor">Professor</option>
+                  <option value="Research Fellow">Research Fellow</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Subject Specialization</label>
+                <input 
+                  type="text" 
+                  value={driveForm.subject}
+                  onChange={(e) => setDriveForm({...driveForm, subject: e.target.value})}
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Department / School</label>
+                <input 
+                  type="text" 
+                  value={driveForm.department}
+                  onChange={(e) => setDriveForm({...driveForm, department: e.target.value})}
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700">Email Address</label>
-                  <input
-                    type="email"
+                  <label className="font-bold text-slate-700 block mb-1">Total Vacancies</label>
+                  <input 
+                    type="number" 
+                    value={driveForm.total_posts}
+                    onChange={(e) => setDriveForm({...driveForm, total_posts: e.target.value})}
+                    className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     required
-                    placeholder="name@gmail.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 focus:ring-2 focus:ring-purple-400 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700">Phone Number</label>
-                  <input
-                    type="text"
+                  <label className="font-bold text-slate-700 block mb-1">Application Deadline</label>
+                  <input 
+                    type="date" 
+                    value={driveForm.deadline}
+                    onChange={(e) => setDriveForm({...driveForm, deadline: e.target.value})}
+                    className="w-full px-3 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     required
-                    placeholder="+91 98765 43210"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 focus:ring-2 focus:ring-purple-400 focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700">CTET Score (Out of 150)</label>
-                  <input
-                    type="number"
-                    min="90"
-                    max="150"
-                    required
-                    placeholder="128"
-                    value={formData.ctet_score}
-                    onChange={(e) => setFormData({ ...formData, ctet_score: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700">B.Ed / D.El.Ed %</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="50"
-                    max="100"
-                    required
-                    placeholder="84.5"
-                    value={formData.bed_percentage}
-                    onChange={(e) => setFormData({ ...formData, bed_percentage: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700">Preferred District</label>
-                <select
-                  value={formData.preferred_district}
-                  onChange={(e) => setFormData({ ...formData, preferred_district: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                >
-                  <option value="Patna">Patna</option>
-                  <option value="Gaya">Gaya</option>
-                  <option value="Muzaffarpur">Muzaffarpur</option>
-                  <option value="Nalanda">Nalanda</option>
-                </select>
-              </div>
-
-              <div className="pt-3 border-t border-purple-100 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsApplyModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700"
+              <div className="pt-3 flex gap-2">
+                <button 
+                  type="button" 
+                  onClick={() => setIsAddDriveModalOpen(false)}
+                  className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold shadow-md shadow-purple-600/20"
+                <button 
+                  type="submit" 
+                  className="w-1/2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold shadow-md shadow-purple-600/20"
+                >
+                  Publish Drive
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Candidate Application */}
+      {isApplyModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-purple-100">
+            <div className="flex items-center justify-between border-b border-purple-100 pb-3">
+              <div>
+                <h3 className="text-base font-extrabold text-purple-950">Faculty Application Form</h3>
+                <p className="text-[11px] text-slate-500">Drive: {selectedVacancy?.drive_code}</p>
+              </div>
+              <button onClick={() => setIsApplyModalOpen(false)} className="p-1 rounded-full text-slate-400 hover:bg-slate-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleFormSubmit} className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Full Name</label>
+                <input 
+                  type="text" 
+                  value={formData.applicant_name}
+                  onChange={(e) => setFormData({...formData, applicant_name: e.target.value})}
+                  placeholder="e.g. Dr. SS Reddy"
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Email Address</label>
+                <input 
+                  type="email" 
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  placeholder="name@gmail.com"
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Phone Number</label>
+                <input 
+                  type="tel" 
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  placeholder="+91 9876543210"
+                  className="w-full px-3 py-2 rounded-xl border border-purple-200"
+                  required
+                />
+              </div>
+
+              <div className="pt-3 flex gap-2">
+                <button 
+                  type="button" 
+                  onClick={() => setIsApplyModalOpen(false)}
+                  className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="w-1/2 py-2.5 rounded-xl bg-purple-600 text-white font-extrabold shadow-md shadow-purple-600/20"
                 >
                   Submit Application
                 </button>
