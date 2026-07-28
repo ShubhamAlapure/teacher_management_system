@@ -184,7 +184,7 @@ export const LeavePayrollModule = () => {
                         {(role === 'principal' || role === 'admin') && l.status === 'Pending' && (
                           <div className="flex items-center justify-end gap-1">
                             <button
-                              onClick={() => updateLeaveStatus(l.id, 'Approved', 'Approved by Principal')}
+                              onClick={() => updateLeaveStatus(l.id, 'Approved', 'Approved by HOD / School Dean')}
                               className="px-2.5 py-1 rounded bg-purple-600 text-white text-[10px] font-extrabold"
                             >
                               Approve

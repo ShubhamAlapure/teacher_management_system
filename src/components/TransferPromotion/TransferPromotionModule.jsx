@@ -146,10 +146,10 @@ export const TransferPromotionModule = () => {
                 <div className="flex items-center gap-2">
                   {role === 'principal' && trf.status === 'Pending Principal' && (
                     <button
-                      onClick={() => updateTransferStatus(trf.id, 'Pending DEO', 'Recommended', true)}
+                      onClick={() => updateTransferStatus(trf.id, 'Pending DEO', 'Recommended by Dean / HOD', true)}
                       className="px-3 py-1 rounded-lg bg-purple-600 text-white text-xs font-extrabold"
                     >
-                      Recommend to DEO
+                      Recommend Transfer (Dean / HOD)
                     </button>
                   )}
 
