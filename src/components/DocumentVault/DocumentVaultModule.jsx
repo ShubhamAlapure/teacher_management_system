@@ -113,7 +113,21 @@ export const DocumentVaultModule = () => {
 
       {/* Document Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {documents.map((doc) => {
+        {documents
+          .filter(doc => {
+            // Admin and Principal/HOD can see ALL documents
+            if (role === 'admin' || role === 'principal') return true;
+            // Applicants and teachers can only see their OWN uploaded documents
+            const myId = currentUser?.emp_id || currentUser?.id || activeTeacher.emp_id || activeTeacher.id;
+            return (
+              doc.teacher_id === myId ||
+              doc.teacher_id === currentUser?.id ||
+              doc.teacher_id === activeTeacher.id ||
+              doc.teacher_name === currentUser?.full_name ||
+              doc.teacher_name === activeTeacher.full_name
+            );
+          })
+          .map((doc) => {
           const src = getPreviewSrc(doc);
           return (
             <div 
@@ -189,9 +203,28 @@ export const DocumentVaultModule = () => {
               </div>
             </div>
           );
-        })}
+          })
+        }
+        {/* Empty state for applicants with no own documents */}
+        {(role === 'applicant' || role === 'teacher') && documents.filter(doc => {
+          const myId = currentUser?.emp_id || currentUser?.id || activeTeacher.emp_id || activeTeacher.id;
+          return (
+            doc.teacher_id === myId ||
+            doc.teacher_id === currentUser?.id ||
+            doc.teacher_id === activeTeacher.id ||
+            doc.teacher_name === currentUser?.full_name ||
+            doc.teacher_name === activeTeacher.full_name
+          );
+        }).length === 0 && (
+          <div className="col-span-3 py-16 flex flex-col items-center text-center text-slate-400 gap-3">
+            <div className="w-14 h-14 rounded-full bg-purple-50 border border-purple-200 flex items-center justify-center">
+              <Upload className="w-6 h-6 text-purple-400" />
+            </div>
+            <p className="text-sm font-bold text-slate-600">No documents uploaded yet</p>
+            <p className="text-xs text-slate-400">Click <strong>Upload Credential</strong> to submit your certificates, degrees, or ID proofs for verification.</p>
+          </div>
+        )}
       </div>
-
       {/* DELETE CONFIRMATION DIALOG */}
       {confirmDeleteDoc && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 font-sans">
