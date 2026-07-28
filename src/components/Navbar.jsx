@@ -82,7 +82,7 @@ export const Navbar = () => {
                 {displayName}
               </div>
               <div className="text-[10px] text-purple-200 font-mono tracking-tight">
-                {displayId} &bull; <span className="capitalize">{role}</span>
+                {displayId} &bull; <span>{role === 'principal' ? 'School Dean' : role === 'admin' ? 'Master Admin' : role === 'teacher' ? 'Faculty' : 'Applicant'}</span>
               </div>
             </div>
 
@@ -105,7 +105,7 @@ export const Navbar = () => {
                   <p className="text-xs font-extrabold text-purple-950 truncate">{displayName}</p>
                   <p className="text-[11px] text-slate-500 font-mono">{displayId}</p>
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-1 border border-emerald-200">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Authenticated {role.toUpperCase()}
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Authenticated {role === 'principal' ? 'SCHOOL DEAN' : role === 'admin' ? 'MASTER ADMIN' : role.toUpperCase()}
                   </span>
                 </div>
               </div>

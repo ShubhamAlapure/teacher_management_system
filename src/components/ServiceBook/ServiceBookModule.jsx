@@ -14,9 +14,39 @@ import {
 
 export const ServiceBookModule = () => {
   const { activeTeacher, teachers, role } = useApp();
-  const [selectedTeacherId, setSelectedTeacherId] = useState(activeTeacher.id);
 
-  const teacher = teachers.find(t => t.id === selectedTeacherId) || activeTeacher;
+  // Exclude Admin from faculty digital service books (Admin is system governance, not teaching faculty)
+  const facultyTeachers = teachers.filter(t => 
+    t.emp_id !== 'MIT-MASTER-ADMIN-01' && 
+    t.id !== 'admin-master' && 
+    t.cadre !== 'System Administrator' && 
+    t.cadre !== 'Master Administrator' &&
+    !t.full_name?.toLowerCase().includes('system administrator')
+  );
+
+  const defaultTeacher = facultyTeachers.find(t => t.id === activeTeacher.id) 
+    || facultyTeachers[0] 
+    || (activeTeacher.emp_id !== 'MIT-MASTER-ADMIN-01' ? activeTeacher : {
+        id: 'dean-01',
+        emp_id: 'MIT-DEAN-2012-0056',
+        full_name: 'Dr. Rajesh Kumar (School Dean)',
+        email: 'dean.soe@mituniversity.edu.in',
+        cadre: 'School Dean',
+        subject: 'School of Engineering & Technology',
+        current_school: 'School of Engineering (SOE)',
+        district: 'Rajbaug Campus',
+        block: 'Loni Kalbhor',
+        gpf_nps_no: 'PF-MIT-DEAN-056',
+        service_status: 'Active',
+        joining_date: '2018-06-01',
+        basic_pay: 144200,
+        seniority_rank: 1,
+        qualification: 'Ph.D. / M.Tech'
+      });
+
+  const [selectedTeacherId, setSelectedTeacherId] = useState(defaultTeacher.id);
+
+  const teacher = facultyTeachers.find(t => t.id === selectedTeacherId) || defaultTeacher;
   const isApplicant = teacher.emp_id?.startsWith('MIT-APP-') || teacher.cadre === 'Applicant';
 
   const handlePrint = () => {
@@ -39,13 +69,13 @@ export const ServiceBookModule = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {(role === 'admin' || role === 'principal') && teachers.length > 0 && (
+          {(role === 'admin' || role === 'principal') && facultyTeachers.length > 0 && (
             <select
               value={selectedTeacherId}
               onChange={(e) => setSelectedTeacherId(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 bg-white shadow-sm"
+              className="px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 bg-white shadow-sm font-medium"
             >
-              {teachers.map(t => (
+              {facultyTeachers.map(t => (
                 <option key={t.id} value={t.id}>
                   {t.full_name} ({t.emp_id}) - {t.emp_id.startsWith('MIT-APP-') ? 'Applicant' : t.cadre}
                 </option>

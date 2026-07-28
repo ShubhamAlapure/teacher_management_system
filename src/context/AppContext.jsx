@@ -110,7 +110,7 @@ export const AppProvider = ({ children }) => {
             full_name: 'MIT-ADT System Administrator',
             email: 'shubham.alapure@mituniversity.edu.in',
             joining_date: '2015-01-01',
-            cadre: 'Principal',
+            cadre: 'System Administrator',
             subject: 'Master Administration & VC Office',
             current_school: 'MIT-ADT University Secretariat',
             district: 'Rajbaug Campus',
@@ -118,6 +118,8 @@ export const AppProvider = ({ children }) => {
             gpf_nps_no: 'PF-MIT-ADMIN-001',
             service_status: 'Active'
           }]);
+        } else if (adminExists[0].cadre === 'Principal') {
+          await supabase.from('teachers').update({ cadre: 'System Administrator' }).eq('emp_id', 'MIT-MASTER-ADMIN-01');
         }
 
         // Ensure HOD/Dean exists in Supabase DB
@@ -128,7 +130,7 @@ export const AppProvider = ({ children }) => {
             full_name: 'Dr. Rajesh Kumar (School Dean)',
             email: 'dean.soe@mituniversity.edu.in',
             joining_date: '2018-06-01',
-            cadre: 'Principal',
+            cadre: 'School Dean',
             subject: 'School of Engineering & Technology',
             current_school: 'School of Engineering (SOE)',
             district: 'Rajbaug Campus',
@@ -136,10 +138,20 @@ export const AppProvider = ({ children }) => {
             gpf_nps_no: 'PF-MIT-DEAN-056',
             service_status: 'Active'
           }]);
+        } else if (deanExists[0].cadre === 'Principal') {
+          await supabase.from('teachers').update({ cadre: 'School Dean' }).eq('emp_id', 'MIT-DEAN-2012-0056');
         }
 
         const { data: tData } = await supabase.from('teachers').select('*');
-        if (tData && tData.length > 0) setTeachers(tData);
+        if (tData && tData.length > 0) {
+          // Exclude admin from faculty list in state
+          const cleanTeachers = tData.map(t => {
+            if (t.emp_id === 'MIT-MASTER-ADMIN-01' && t.cadre === 'Principal') return { ...t, cadre: 'System Administrator' };
+            if (t.emp_id === 'MIT-DEAN-2012-0056' && t.cadre === 'Principal') return { ...t, cadre: 'School Dean' };
+            return t;
+          });
+          setTeachers(cleanTeachers);
+        }
 
         const { data: aData } = await supabase.from('recruitment_applications').select('*');
         if (aData && aData.length > 0) setApplications(aData);
