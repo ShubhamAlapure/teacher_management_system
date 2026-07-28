@@ -21,6 +21,10 @@ export const AppProvider = ({ children }) => {
   // 1. Auth & Persona Role State: 'applicant' | 'teacher' | 'principal' | 'admin'
   const [role, setRole] = useState(() => localStorage.getItem('shikshak_role') || 'teacher');
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('shikshak_authenticated') === 'true');
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('shikshak_current_user');
+    return saved ? JSON.parse(saved) : null;
+  });
   
   // 2. Active Tab
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -518,12 +522,33 @@ export const AppProvider = ({ children }) => {
     pushNotification('System Cleared', 'All mock data removed. System ready for live database records.', 'info');
   };
 
-  const login = (roleId, userEmpId) => {
+  const login = (roleId, userEmpId, userFullName) => {
     setRole(roleId);
     setIsAuthenticated(true);
+
+    let name = userFullName;
+    let empId = userEmpId;
+
+    if (roleId === 'admin') {
+      name = name || 'SHUBHAM SHARADRAO ALAPURE';
+      empId = empId || 'MIT-MASTER-ADMIN-01';
+    } else {
+      const match = teachers.find(t => t.emp_id === userEmpId || t.full_name === userEmpId);
+      if (match) {
+        name = match.full_name;
+        empId = match.emp_id;
+      } else {
+        name = name || (roleId === 'applicant' ? 'Faculty Applicant' : 'Faculty Member');
+        empId = empId || 'MIT-USER-01';
+      }
+    }
+
+    const userInfo = { full_name: name, emp_id: empId, role: roleId };
+    setCurrentUser(userInfo);
+    localStorage.setItem('shikshak_current_user', JSON.stringify(userInfo));
     localStorage.setItem('shikshak_role', roleId);
     localStorage.setItem('shikshak_authenticated', 'true');
-    pushNotification('Welcome to TLMS', `Signed in as ${roleId.toUpperCase()} persona.`, 'success');
+    pushNotification('Welcome to TLMS', `Signed in as ${name}.`, 'success');
   };
 
   const registerUser = async (userData) => {
@@ -566,12 +591,14 @@ export const AppProvider = ({ children }) => {
       }
     }
 
-    login(userData.role, userData.emp_id);
+    login(userData.role, userData.emp_id, userData.full_name);
     pushNotification('User Registered in DB', `User ${userData.full_name} (${userData.emp_id}) saved to database.`, 'success');
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    setCurrentUser(null);
+    localStorage.removeItem('shikshak_current_user');
     localStorage.setItem('shikshak_authenticated', 'false');
     pushNotification('Signed Out', 'You have been signed out of the TLMS portal.', 'info');
   };
@@ -582,6 +609,7 @@ export const AppProvider = ({ children }) => {
         role,
         setRole,
         isAuthenticated,
+        currentUser,
         login,
         registerUser,
         logout,

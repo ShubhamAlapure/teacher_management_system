@@ -24,12 +24,17 @@ export const Navbar = () => {
     setIsSupabaseModalOpen,
     setIsNotificationModalOpen,
     activeTeacher,
+    currentUser,
     resetToDemoData,
     logout
   } = useApp();
 
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const dbStatus = getSupabaseStatus();
+
+  const displayName = currentUser?.full_name || (role === 'admin' ? 'SHUBHAM SHARADRAO ALAPURE' : activeTeacher.full_name || 'Faculty Member');
+  const displayId = currentUser?.emp_id || activeTeacher.emp_id || 'MIT-USER-01';
+  const userInitials = displayName.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
   const rolesList = [
     { key: 'applicant', label: 'Faculty Applicant', icon: User, desc: 'Apply for recruitment drives & track application status' },
@@ -110,15 +115,15 @@ export const Navbar = () => {
             >
               <div className="hidden lg:block">
                 <div className="text-xs font-extrabold uppercase text-white tracking-wide">
-                  SHUBHAM SHARADRAO ALAPURE
+                  {displayName}
                 </div>
                 <div className="text-[10px] text-purple-200 font-mono tracking-tight">
-                  {role === 'applicant' ? 'ADT24SOCB1153' : activeTeacher.emp_id} &bull; <span className="capitalize">{role}</span>
+                  {displayId} &bull; <span className="capitalize">{role}</span>
                 </div>
               </div>
 
               <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center border-2 border-purple-300 shadow-md font-bold text-xs">
-                SA
+                {userInitials}
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-purple-200" />
             </button>
