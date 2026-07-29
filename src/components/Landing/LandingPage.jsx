@@ -62,9 +62,19 @@ export const LandingPage = ({ onOpenAuth }) => {
         </div>
       </header>
 
-      {/* 2. Hero Section (Vivid Purple Banner matching screenshot pblmitadtu.in) */}
-      <section className="bg-gradient-to-r from-[#6b21a8] via-[#7e22ce] to-[#9333ea] text-white py-16 px-6 lg:px-16 overflow-hidden relative">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      {/* 2. Hero Section — MIT-ADT Campus photo background */}
+      <section
+        className="text-white py-16 px-6 lg:px-16 overflow-hidden relative"
+        style={{
+          backgroundImage: 'url(/mit_adt_campus.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        {/* Dark + purple tint overlay so text stays readable */}
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-950/90 via-purple-900/80 to-black/50 pointer-events-none" />
+        <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Left Content */}
           <div className="lg:col-span-7 space-y-6">
