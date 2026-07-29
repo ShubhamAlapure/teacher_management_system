@@ -64,12 +64,13 @@ export const LandingPage = ({ onOpenAuth }) => {
 
       {/* 2. Hero Section — MIT-ADT Campus photo background */}
       <section
-        className="text-white py-16 px-6 lg:px-16 overflow-hidden relative"
+        className="text-white py-20 px-6 lg:px-16 overflow-hidden relative"
         style={{
           backgroundImage: 'url(/mit_adt_campus.jpg)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center top',
+          backgroundPosition: 'center 30%',
           backgroundRepeat: 'no-repeat',
+          minHeight: '520px',
         }}
       >
         {/* Dark + purple tint overlay so text stays readable */}
