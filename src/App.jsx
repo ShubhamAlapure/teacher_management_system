@@ -6,6 +6,7 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { OverviewDashboard } from './components/Dashboard/OverviewDashboard';
 import { RecruitmentModule } from './components/Recruitment/RecruitmentModule';
+import { FacultiesModule } from './components/Faculties/FacultiesModule';
 import { ServiceBookModule } from './components/ServiceBook/ServiceBookModule';
 import { TransferPromotionModule } from './components/TransferPromotion/TransferPromotionModule';
 import { LeavePayrollModule } from './components/LeavePayroll/LeavePayrollModule';
@@ -21,14 +22,15 @@ const MainContent = () => {
 
   return (
     <main className="flex-1 p-4 lg:p-8 overflow-y-auto max-w-7xl mx-auto w-full space-y-6">
-      {activeTab === 'dashboard' && <OverviewDashboard />}
+      {activeTab === 'dashboard'   && <OverviewDashboard />}
       {activeTab === 'recruitment' && <RecruitmentModule />}
+      {activeTab === 'faculties'   && <FacultiesModule />}
       {activeTab === 'service_book' && <ServiceBookModule />}
-      {activeTab === 'transfers' && <TransferPromotionModule />}
-      {activeTab === 'leaves' && <LeavePayrollModule />}
-      {activeTab === 'training' && <TrainingAppraisalModule />}
-      {activeTab === 'documents' && <DocumentVaultModule />}
-      {activeTab === 'analytics' && <AnalyticsModule />}
+      {activeTab === 'transfers'   && <TransferPromotionModule />}
+      {activeTab === 'leaves'      && <LeavePayrollModule />}
+      {activeTab === 'training'    && <TrainingAppraisalModule />}
+      {activeTab === 'documents'   && <DocumentVaultModule />}
+      {activeTab === 'analytics'   && <AnalyticsModule />}
     </main>
   );
 };

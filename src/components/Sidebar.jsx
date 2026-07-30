@@ -11,20 +11,40 @@ import {
   BarChart3,
   Lock,
   LogOut,
-  Sparkles
+  Users
 } from 'lucide-react';
 
 export const Sidebar = () => {
-  const { activeTab, setActiveTab, role, transfers, leaves, documents, logout } = useApp();
+  const { activeTab, setActiveTab, role, transfers, leaves, documents, applications, teachers, logout } = useApp();
 
   // Pending Counts for Badges
   const pendingTransfers = transfers.filter(t => t.status.includes('Pending')).length;
   const pendingLeaves = leaves.filter(l => l.status === 'Pending').length;
   const pendingDocs = documents.filter(d => d.status === 'Pending').length;
+  const appointedCount = applications.filter(a => a.status === 'Appointed').length;
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['applicant', 'teacher', 'principal', 'admin'], locked: false },
-    { id: 'recruitment', label: 'Recruitment & Job Repository', icon: UserPlus, roles: ['applicant', 'teacher', 'principal', 'admin'], locked: false },
+    { 
+      id: 'recruitment', 
+      label: 'Recruitment & Job Repository', 
+      icon: UserPlus, 
+      roles: ['applicant', 'teacher', 'principal', 'admin'], 
+      locked: false,
+      badge: (role === 'principal' || role === 'admin') && appointedCount > 0 ? appointedCount : null
+    },
+    // Faculties tab — HOD & Admin only
+    ...(role === 'principal' || role === 'admin' ? [{
+      id: 'faculties',
+      label: `Faculties`,
+      icon: Users,
+      roles: ['principal', 'admin'],
+      locked: false,
+      badge: teachers.filter(t =>
+        !['System Administrator', 'Master Administrator'].includes(t.cadre) &&
+        t.emp_id !== 'MIT-MASTER-ADMIN-01'
+      ).length + applications.filter(a => a.status === 'Appointed').length || null
+    }] : []),
     { id: 'service_book', label: 'Digital Service Book', icon: BookOpen, roles: ['applicant', 'teacher', 'principal', 'admin'], locked: role === 'applicant' },
     { 
       id: 'transfers', 

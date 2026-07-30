@@ -339,7 +339,68 @@ export const AppProvider = ({ children }) => {
 
   // 2. Update Application Status
   const updateApplicationStatus = async (appId, status, remarks = '') => {
+    // Find the application before updating so we have the name/email
+    const targetApp = applications.find(a => a.id === appId);
+
     setApplications(prev => prev.map(a => a.id === appId ? { ...a, status, remarks } : a));
+
+    // When HOD appoints a candidate, add them to the faculty roster
+    if (status === 'Appointed' && targetApp) {
+      const newFaculty = {
+        id: `tch-${Date.now()}`,
+        emp_id: targetApp.applicant_id || `MIT-FAC-${Date.now().toString().slice(-6)}`,
+        full_name: targetApp.applicant_name,
+        email: targetApp.email || '',
+        phone: targetApp.phone || '-',
+        cadre: targetApp.applied_post || 'Assistant Professor',
+        subject: targetApp.department || 'School of Engineering & Technology (SOE)',
+        current_school: 'School of Engineering & Technology (SOE)',
+        district: 'Rajbaug Campus',
+        block: 'Loni Kalbhor',
+        joining_date: new Date().toISOString().split('T')[0],
+        seniority_rank: teachers.length + 1,
+        basic_pay: 57700,
+        gpf_nps_no: `PF-MIT-${Date.now().toString().slice(-4)}`,
+        service_status: 'Active',
+        qualification: 'Ph.D. / M.Tech',
+        source: 'Appointed via Recruitment Drive',
+        drive_code: targetApp.drive_code || ''
+      };
+
+      // Only add if not already in teachers list
+      setTeachers(prev => {
+        const exists = prev.some(t => t.emp_id === newFaculty.emp_id || (newFaculty.email && t.email === newFaculty.email));
+        return exists ? prev : [newFaculty, ...prev];
+      });
+
+      // Push appointment notification to faculty
+      pushNotification(
+        '🎉 Appointment Letter Issued!',
+        `Congratulations ${targetApp.applicant_name}! You have been officially APPOINTED as ${targetApp.applied_post || 'Faculty Member'} at MIT-ADT University. Welcome to the team! Report to HR for onboarding.`,
+        'success'
+      );
+
+      if (isSupabaseConfigured && supabase) {
+        try {
+          await supabase.from('recruitment_applications').update({ status, remarks }).eq('id', appId);
+          await supabase.from('teachers').insert([{
+            emp_id: newFaculty.emp_id,
+            full_name: newFaculty.full_name,
+            email: newFaculty.email,
+            joining_date: newFaculty.joining_date,
+            cadre: 'TGT',
+            subject: 'General Faculty',
+            current_school: 'School of Engineering & Technology (SOE)',
+            district: 'Rajbaug Campus',
+            block: 'Loni Kalbhor',
+            service_status: 'Active'
+          }]);
+        } catch (err) {
+          console.error('Supabase appoint error:', err);
+        }
+      }
+      return;
+    }
 
     if (isSupabaseConfigured && supabase) {
       try {
@@ -349,7 +410,15 @@ export const AppProvider = ({ children }) => {
       }
     }
 
-    pushNotification('Recruitment Updated', `Application status updated to ${status}.`, 'info');
+    if (status === 'Shortlisted' && targetApp) {
+      pushNotification(
+        '📋 Candidate Shortlisted',
+        `${targetApp.applicant_name} has been shortlisted by HOD for ${targetApp.drive_code || 'Faculty Drive'}. Awaiting appointment decision.`,
+        'info'
+      );
+    } else {
+      pushNotification('Recruitment Updated', `Application status updated to ${status}.`, 'info');
+    }
   };
 
   // 3. Submit Transfer Request

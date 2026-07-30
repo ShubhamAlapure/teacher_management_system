@@ -12,13 +12,20 @@ import {
   Building,
   Calendar,
   X,
-  PlusCircle
+  PlusCircle,
+  Users,
+  Star,
+  ChevronRight,
+  UserCheck,
+  GraduationCap
 } from 'lucide-react';
 
 export const RecruitmentModule = () => {
   const { 
     vacancies, 
     applications, 
+    teachers,
+    currentUser,
     addApplication, 
     updateApplicationStatus, 
     role,
@@ -31,6 +38,7 @@ export const RecruitmentModule = () => {
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [isAddDriveModalOpen, setIsAddDriveModalOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('All');
+  const [isFacultiesOpen, setIsFacultiesOpen] = useState(false);
 
   // Form State for Applicant
   const [formData, setFormData] = useState({
@@ -121,9 +129,41 @@ export const RecruitmentModule = () => {
     setIsAddDriveModalOpen(false);
   };
 
+  // HOD/Admin: filtered list of ALL applications
   const filteredApplications = filterStatus === 'All' 
     ? applications 
     : applications.filter(a => a.status === filterStatus);
+
+  // Applicant: only their own applications (matched by email or emp_id)
+  const myApplications = applications.filter(a =>
+    (currentUser?.email && a.email && a.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+    (currentUser?.emp_id && a.applicant_id === currentUser.emp_id)
+  );
+
+  // All faculties: initial teachers + newly appointed (from applications with status 'Appointed')
+  const appointedFromRecruitment = applications
+    .filter(a => a.status === 'Appointed')
+    .map(a => ({
+      id: a.id,
+      emp_id: a.applicant_id || `MIT-FAC-REC-${a.id}`,
+      full_name: a.applicant_name,
+      email: a.email || '',
+      cadre: a.applied_post || 'Assistant Professor',
+      subject: a.department || 'School of Engineering & Technology (SOE)',
+      drive_code: a.drive_code || '',
+      source: 'Recruitment Drive',
+      service_status: 'Active',
+      joining_date: a.applied_at || new Date().toISOString().split('T')[0]
+    }));
+
+  // Merge teachers (excluding admin/dean roles) + appointed candidates (deduplicate by email)
+  const regularFaculties = teachers.filter(t =>
+    !['System Administrator', 'Master Administrator', 'School Dean', 'Dean / HOD'].includes(t.cadre) &&
+    t.emp_id !== 'MIT-MASTER-ADMIN-01'
+  );
+  const appointedEmails = new Set(regularFaculties.map(t => t.email).filter(Boolean));
+  const newlyAppointed = appointedFromRecruitment.filter(a => !appointedEmails.has(a.email));
+  const allFaculties = [...regularFaculties, ...newlyAppointed];
 
   const sampleDrives = vacancies.length > 0 ? vacancies : [
     {
@@ -192,6 +232,72 @@ export const RecruitmentModule = () => {
         </div>
       </div>
 
+      {/* ====== FACULTIES PANEL ====== */}
+      <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-sm overflow-hidden">
+        {/* Collapsible header */}
+        <button
+          onClick={() => setIsFacultiesOpen(v => !v)}
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/40 transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-indigo-600 shadow-md shadow-indigo-600/20">
+              <Users className="w-4 h-4 text-white" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-sm font-extrabold text-purple-950">
+                Faculties
+                <span className="ml-2 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-600 text-white align-middle">
+                  {allFaculties.length}
+                </span>
+              </h3>
+              <p className="text-[11px] text-slate-500">All appointed & existing faculty members at MIT-ADT University</p>
+            </div>
+          </div>
+          <ChevronRight className={`w-4 h-4 text-indigo-600 transition-transform duration-200 ${isFacultiesOpen ? 'rotate-90' : ''}`} />
+        </button>
+
+        {isFacultiesOpen && (
+          <div className="px-6 pb-6 space-y-3">
+            {allFaculties.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                <Users className="w-10 h-10 mb-2 opacity-30" />
+                <p className="text-xs font-medium">No faculty members yet. Appoint candidates to populate this list.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                {allFaculties.map((fac, idx) => (
+                  <div key={fac.id || idx} className="bg-white rounded-2xl border border-purple-100 p-4 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all">
+                    <div className="flex items-start gap-3">
+                      {/* Avatar */}
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md">
+                        <span className="text-sm font-extrabold text-white">
+                          {(fac.full_name || 'F').charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-extrabold text-slate-900 truncate">{fac.full_name}</p>
+                        <p className="text-[10px] text-slate-500 font-mono truncate">{fac.emp_id}</p>
+                        <p className="text-[10px] text-purple-700 font-semibold mt-0.5 truncate">{fac.cadre || 'Assistant Professor'}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-purple-50 flex items-center justify-between">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide ${
+                        fac.source === 'Recruitment Drive' || fac.source === 'Appointed via Recruitment Drive'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-purple-100 text-purple-800'
+                      }`}>
+                        {fac.source === 'Recruitment Drive' || fac.source === 'Appointed via Recruitment Drive' ? '🎓 Newly Appointed' : 'Existing Faculty'}
+                      </span>
+                      <span className="text-[9px] text-slate-400">{fac.joining_date || '—'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Active Faculty Drives Grid */}
       <div className="space-y-4">
         <h3 className="text-sm font-extrabold text-purple-950 flex items-center gap-2">
@@ -230,7 +336,8 @@ export const RecruitmentModule = () => {
         </div>
       </div>
 
-      {/* Applications Table */}
+      {/* ── HOD / ADMIN: Full Candidate Applications Table ── */}
+      {(role === 'principal' || role === 'admin') && (
       <div className="p-5 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-100 pb-3">
           <div>
@@ -274,7 +381,7 @@ export const RecruitmentModule = () => {
               {filteredApplications.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-6 text-center text-slate-400 italic">
-                    No recruitment applications registered yet. Click "Apply Now" or "Post New Vacancy Drive".
+                    No applications received yet. Candidates apply via the drives above.
                   </td>
                 </tr>
               ) : (
@@ -297,13 +404,30 @@ export const RecruitmentModule = () => {
                       </span>
                     </td>
                     <td className="p-3 text-right">
-                      {(role === 'principal' || role === 'admin') && app.status === 'Submitted' && (
+                      {app.status === 'Submitted' && (
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => updateApplicationStatus(app.id, 'Shortlisted')}
                             className="px-2 py-1 rounded bg-purple-600 text-white text-[10px] font-extrabold"
                           >
                             Shortlist (HOD)
+                          </button>
+                          <button
+                            onClick={() => updateApplicationStatus(app.id, 'Rejected')}
+                            className="px-2 py-1 rounded bg-rose-100 text-rose-900 text-[10px] font-bold"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                      {app.status === 'Shortlisted' && (
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => updateApplicationStatus(app.id, 'Appointed')}
+                            className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-[10px] font-extrabold shadow-md shadow-emerald-500/30 flex items-center gap-1 hover:from-emerald-600 hover:to-teal-700 transition-all"
+                          >
+                            <UserCheck className="w-3 h-3" />
+                            Appoint Faculty
                           </button>
                           <button
                             onClick={() => updateApplicationStatus(app.id, 'Rejected')}
@@ -321,6 +445,51 @@ export const RecruitmentModule = () => {
           </table>
         </div>
       </div>
+      )}
+
+      {/* ── APPLICANT: My Application Status Panel ── */}
+      {role === 'applicant' && (
+        <div className="p-5 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-4">
+          <div className="flex items-center gap-2 border-b border-purple-100 pb-3">
+            <FileText className="w-4 h-4 text-purple-600" />
+            <div>
+              <h3 className="text-sm font-extrabold text-purple-950">My Application Status</h3>
+              <p className="text-[11px] text-slate-500">Track the progress of your submitted application(s)</p>
+            </div>
+          </div>
+
+          {myApplications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-slate-400 space-y-2">
+              <FileText className="w-10 h-10 opacity-25" />
+              <p className="text-xs font-semibold">You have not applied to any drive yet.</p>
+              <p className="text-[11px]">Click <span className="font-bold text-purple-700">Apply Now</span> on any active drive above to submit your application.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {myApplications.map(app => (
+                <div key={app.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-purple-50/60 border border-purple-100">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-extrabold text-slate-900">{app.drive_code || 'MIT-DRIVE-2026'}</p>
+                    <p className="text-[11px] text-slate-600">{app.applied_post || 'Assistant Professor'} — {app.department || 'SOE'}</p>
+                    <p className="text-[10px] text-slate-400">Applied on: {app.applied_at || app.applied_date || '—'}</p>
+                  </div>
+                  <span className={`self-start sm:self-center px-3 py-1.5 rounded-full text-[10px] font-extrabold whitespace-nowrap ${
+                    app.status === 'Appointed'   ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' :
+                    app.status === 'Shortlisted' ? 'bg-purple-100 text-purple-900 border border-purple-200' :
+                    app.status === 'Rejected'    ? 'bg-rose-100 text-rose-900 border border-rose-200' :
+                    'bg-amber-100 text-amber-900 border border-amber-200'
+                  }`}>
+                    {app.status === 'Appointed'   ? '🎉 Appointed' :
+                     app.status === 'Shortlisted' ? '📋 Shortlisted by HOD' :
+                     app.status === 'Rejected'    ? '✕ Not Selected' :
+                     '⏳ Under Review'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* MODAL: Post New Vacancy Drive */}
       {isAddDriveModalOpen && (
