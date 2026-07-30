@@ -25,20 +25,27 @@ export const NotificationsModal = () => {
         </div>
 
         <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-          {notifications.map((n) => (
-            <div key={n.id} className="p-3 rounded-2xl bg-purple-50/50 border border-purple-100 flex items-start gap-3">
-              <div className="p-2 rounded-xl mt-0.5 shrink-0 bg-purple-100 text-purple-700">
-                {n.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <Info className="w-4 h-4" />}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-extrabold text-slate-900">{n.title}</p>
-                  <span className="text-[10px] text-slate-500 font-mono">{n.time}</span>
-                </div>
-                <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">{n.message}</p>
-              </div>
+          {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+              <Bell className="w-8 h-8 mb-2 opacity-30" />
+              <p className="text-xs font-medium">No notifications</p>
             </div>
-          ))}
+          ) : (
+            notifications.map((n) => (
+              <div key={n.id} className="p-3 rounded-2xl bg-purple-50/50 border border-purple-100 flex items-start gap-3">
+                <div className="p-2 rounded-xl mt-0.5 shrink-0 bg-purple-100 text-purple-700">
+                  {n.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <Info className="w-4 h-4" />}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-extrabold text-slate-900">{n.title}</p>
+                    <span className="text-[10px] text-slate-500 font-mono">{n.time}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">{n.message}</p>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="flex justify-end pt-2 border-t border-purple-100">

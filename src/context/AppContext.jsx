@@ -33,11 +33,7 @@ export const AppProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
   
   // 4. Toast Notifications State
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Transfer Update', message: 'Spouse Ground Transfer for Pooja Deshmukh pending DEO review.', type: 'info', time: '10m ago' },
-    { id: 2, title: 'Leave Application', message: 'Sunita Sharma requested 2 days Casual Leave.', type: 'warning', time: '1h ago' },
-    { id: 3, title: 'APAR Submission', message: 'APAR 2025-26 self-assessment submitted by 84% teachers in Patna Sadar.', type: 'success', time: '3h ago' }
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
   // Modal Flags
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
