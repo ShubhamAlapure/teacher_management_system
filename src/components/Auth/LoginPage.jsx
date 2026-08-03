@@ -37,7 +37,7 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
   const roles = [
     {
       id: 'admin',
-      title: 'Master Admin (Shubham S. Alapure)',
+      title: 'Master Admin',
       icon: ShieldCheck,
       demoId: 'MIT-MASTER-ADMIN-01',
       desc: 'Master Admin & VC Office. Full administrative authority over all 8 modules & Supabase DB.'
@@ -208,16 +208,7 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
                 </button>
               </div>
 
-              {authMode === 'signin' && (
-                <button
-                  type="button"
-                  onClick={handleFillDemoCredentials}
-                  className="text-[11px] font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200"
-                >
-                  <Sparkles className="w-3 h-3 text-purple-600" />
-                  <span>Auto-fill Demo ID</span>
-                </button>
-              )}
+
             </div>
 
             {/* SIGN IN MODE: Persona Selector */}
