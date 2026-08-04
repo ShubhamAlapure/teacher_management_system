@@ -153,7 +153,19 @@ export const AppProvider = ({ children }) => {
         if (aData && aData.length > 0) setApplications(aData);
 
         const { data: trData } = await supabase.from('transfer_requests').select('*');
-        if (trData && trData.length > 0) setTransfers(trData);
+        if (trData && trData.length > 0) {
+          const transfersWithNames = trData.map(trf => {
+            const matchedTeacher = (tData || []).find(t => t.id === trf.teacher_id || t.emp_id === trf.teacher_id);
+            return {
+              ...trf,
+              teacher_name: trf.teacher_name || matchedTeacher?.full_name || 'Faculty Member',
+              cadre: trf.cadre || matchedTeacher?.cadre || 'Assistant Professor',
+              subject: trf.subject || matchedTeacher?.subject || 'Department',
+              status: trf.status || trf.deo_approval || 'Pending HOD Approval'
+            };
+          });
+          setTransfers(transfersWithNames);
+        }
 
         const { data: lData } = await supabase.from('leave_requests').select('*');
         if (lData && lData.length > 0) setLeaves(lData);
@@ -425,15 +437,23 @@ export const AppProvider = ({ children }) => {
 
   // 3. Submit Transfer Request
   const addTransferRequest = async (trfData) => {
+    const matchedTeacher = (teachers || []).find(t => t.emp_id === currentUser?.emp_id || t.id === activeTeacher?.id);
+    const teacherId = currentUser?.emp_id || matchedTeacher?.id || activeTeacher?.id || 'tch-01';
+    const teacherName = currentUser?.full_name || matchedTeacher?.full_name || activeTeacher?.full_name || 'Faculty Member';
+    const cadre = matchedTeacher?.cadre || activeTeacher?.cadre || 'Assistant Professor';
+    const subject = matchedTeacher?.subject || activeTeacher?.subject || 'Engineering & Technology';
+    const currentSchool = matchedTeacher?.current_school || activeTeacher?.current_school || 'School of Engineering & Technology (SOE)';
+    const currentDistrict = matchedTeacher?.district || activeTeacher?.district || 'Rajbaug Campus';
+
     const newTrf = {
       id: `trf-${Date.now()}`,
-      teacher_id: activeTeacher.id,
-      teacher_name: activeTeacher.full_name,
-      cadre: activeTeacher.cadre,
-      subject: activeTeacher.subject,
-      current_school: activeTeacher.current_school,
-      current_district: activeTeacher.district,
-      status: 'Pending Principal',
+      teacher_id: teacherId,
+      teacher_name: teacherName,
+      cadre: cadre,
+      subject: subject,
+      current_school: currentSchool,
+      current_district: currentDistrict,
+      status: 'Pending HOD Approval',
       created_at: new Date().toISOString().split('T')[0],
       ...trfData
     };

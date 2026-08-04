@@ -62,6 +62,17 @@ export const TransferPromotionModule = () => {
     });
   };
 
+  // Resolve missing teacher name, cadre, subject for transfer records
+  const resolveTransferDetails = (trf) => {
+    const matched = (teachers || []).find(t => t.id === trf.teacher_id || t.emp_id === trf.teacher_id);
+    const teacherName = (trf.teacher_name && trf.teacher_name !== 'Faculty Member') 
+      ? trf.teacher_name 
+      : (matched?.full_name || trf.teacher_name || 'Faculty Member');
+    const cadre = trf.cadre || matched?.cadre || 'Assistant Professor';
+    const subject = trf.subject || matched?.subject || 'Engineering & Technology';
+    return { teacherName, cadre, subject };
+  };
+
   return (
     <div className="space-y-6 font-sans">
       
@@ -125,28 +136,30 @@ export const TransferPromotionModule = () => {
               No active transfer applications found.
             </div>
           ) : (
-            visibleTransfers.map((trf) => (
-              <div 
-                key={trf.id}
-                className="p-5 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-3 hover:border-purple-300 transition-all"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-900 border border-purple-200">
-                    {trf.request_type}
-                  </span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                    trf?.status === 'Approved' ? 'bg-emerald-100 text-emerald-900' :
-                    trf?.status === 'Rejected' ? 'bg-rose-100 text-rose-900' :
-                    'bg-amber-100 text-amber-900'
-                  }`}>
-                    {trf?.status || 'Pending'}
-                  </span>
-                </div>
+            visibleTransfers.map((trf) => {
+              const { teacherName, cadre, subject } = resolveTransferDetails(trf);
+              return (
+                <div 
+                  key={trf.id}
+                  className="p-5 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-3 hover:border-purple-300 transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-900 border border-purple-200">
+                      {trf.request_type}
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      trf?.status === 'Approved' ? 'bg-emerald-100 text-emerald-900' :
+                      trf?.status === 'Rejected' ? 'bg-rose-100 text-rose-900' :
+                      'bg-amber-100 text-amber-900'
+                    }`}>
+                      {trf?.status || 'Pending'}
+                    </span>
+                  </div>
 
-                <div>
-                  <h4 className="text-sm font-extrabold text-slate-900">{trf.teacher_name}</h4>
-                  <p className="text-xs text-slate-500">{trf.cadre} ({trf.subject})</p>
-                </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-slate-900">{teacherName}</h4>
+                    <p className="text-xs text-slate-500">{cadre} &bull; {subject}</p>
+                  </div>
 
                 <div className="p-3 rounded-xl bg-purple-50/50 border border-purple-100 space-y-1 text-xs text-slate-700">
                   <div className="flex justify-between">
@@ -202,8 +215,9 @@ export const TransferPromotionModule = () => {
                   </div>
                 </div>
               </div>
-            ))
-          )}
+            );
+          })
+        )}
         </div>
       )}
 
