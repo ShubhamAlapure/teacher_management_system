@@ -26,7 +26,27 @@ export const LeavePayrollModule = () => {
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
 
+  const isPrivilegedRole = role === 'admin' || role === 'principal';
+
   const teacherBalance = leaveBalances[activeTeacher.id] || { casual: 8, medical: 10, earned: 14, maternity_paternity: 180 };
+
+  // For faculty: show only their own leaves. For admin/principal: show all.
+  const visibleLeaves = isPrivilegedRole
+    ? leaves
+    : leaves.filter(l =>
+        l.teacher_id === activeTeacher.id ||
+        l.teacher_id === currentUser?.emp_id ||
+        l.teacher_name === activeTeacher.full_name
+      );
+
+  // For faculty: show only their own payroll. For admin/principal: show all.
+  const visiblePayroll = isPrivilegedRole
+    ? payroll
+    : payroll.filter(p =>
+        p.teacher_id === activeTeacher.id ||
+        p.emp_id === currentUser?.emp_id ||
+        p.teacher_name === activeTeacher.full_name
+      );
 
   const [leaveForm, setLeaveForm] = useState({
     leave_type: 'Casual Leave',
@@ -165,9 +185,13 @@ export const LeavePayrollModule = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-purple-100 text-slate-700">
-                  {leaves.map((l) => (
+                  {visibleLeaves.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-6 text-center text-xs text-slate-400">No leave applications found.</td>
+                    </tr>
+                  ) : visibleLeaves.map((l) => (
                     <tr key={l.id} className="hover:bg-purple-50/50">
-                      <td className="p-3 font-extrabold text-slate-900">{l.teacher_name || currentUser?.full_name || activeTeacher.full_name || 'Faculty Member'}</td>
+                      <td className="p-3 font-extrabold text-slate-900">{l.teacher_name || 'Faculty Member'}</td>
                       <td className="p-3 text-purple-900 font-bold">{l.leave_type}</td>
                       <td className="p-3 text-slate-600">{l.start_date} to {l.end_date}</td>
                       <td className="p-3 font-extrabold text-slate-900">{l.total_days} Days</td>
@@ -211,7 +235,9 @@ export const LeavePayrollModule = () => {
       {/* SUBTAB 2: PAYROLL */}
       {activeSubTab === 'payroll' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {payroll.map((pay) => (
+          {visiblePayroll.length === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-400">No payroll records found.</div>
+          ) : visiblePayroll.map((pay) => (
             <div 
               key={pay.id}
               className="p-5 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-4 hover:border-purple-300 transition-all"
