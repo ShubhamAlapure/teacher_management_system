@@ -50,10 +50,11 @@ export const Sidebar = () => {
       id: 'transfers', 
       label: 'Posting & Transfers', 
       icon: ArrowLeftRight, 
-      roles: ['principal', 'admin'],  // hidden for faculty & applicant
+      roles: ['teacher', 'principal', 'admin'],  // faculty can request transfers
       badge: pendingTransfers > 0 ? pendingTransfers : null,
       locked: false
     },
+
     { 
       id: 'leaves', 
       label: 'Leaves & Payroll', 
