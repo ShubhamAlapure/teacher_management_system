@@ -23,8 +23,11 @@ import {
   GraduationCap,
   Building2,
   FileCheck,
-  ArrowRight
+  ArrowRight,
+  BookOpen
 } from 'lucide-react';
+
+
 import { 
   BarChart, 
   Bar, 
