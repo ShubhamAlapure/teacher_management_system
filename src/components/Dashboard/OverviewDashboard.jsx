@@ -129,7 +129,7 @@ export const OverviewDashboard = () => {
             </div>
 
             <div 
-              onClick={() => setActiveTab('apar')}
+              onClick={() => setActiveTab('training')}
               className="p-5 rounded-2xl bg-white border border-purple-100 hover:border-purple-300 shadow-sm cursor-pointer transition-all space-y-3"
             >
               <div className="flex items-center justify-between">

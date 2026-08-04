@@ -20,17 +20,25 @@ import { ShortlistProfileModal } from './components/ShortlistProfileModal';
 const MainContent = () => {
   const { activeTab } = useApp();
 
+  const renderTab = () => {
+    switch (activeTab) {
+      case 'recruitment': return <RecruitmentModule />;
+      case 'faculties':   return <FacultiesModule />;
+      case 'service_book': return <ServiceBookModule />;
+      case 'transfers':   return <TransferPromotionModule />;
+      case 'leaves':      return <LeavePayrollModule />;
+      case 'training':    
+      case 'apar':        return <TrainingAppraisalModule />;
+      case 'documents':   return <DocumentVaultModule />;
+      case 'analytics':   return <AnalyticsModule />;
+      case 'dashboard':
+      default:            return <OverviewDashboard />;
+    }
+  };
+
   return (
     <main className="flex-1 p-4 lg:p-8 overflow-y-auto max-w-7xl mx-auto w-full space-y-6">
-      {activeTab === 'dashboard'   && <OverviewDashboard />}
-      {activeTab === 'recruitment' && <RecruitmentModule />}
-      {activeTab === 'faculties'   && <FacultiesModule />}
-      {activeTab === 'service_book' && <ServiceBookModule />}
-      {activeTab === 'transfers'   && <TransferPromotionModule />}
-      {activeTab === 'leaves'      && <LeavePayrollModule />}
-      {activeTab === 'training'    && <TrainingAppraisalModule />}
-      {activeTab === 'documents'   && <DocumentVaultModule />}
-      {activeTab === 'analytics'   && <AnalyticsModule />}
+      {renderTab()}
     </main>
   );
 };
