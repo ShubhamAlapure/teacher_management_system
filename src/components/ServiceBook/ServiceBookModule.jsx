@@ -24,29 +24,21 @@ export const ServiceBookModule = () => {
     !t.full_name?.toLowerCase().includes('system administrator')
   );
 
-  const defaultTeacher = facultyTeachers.find(t => t.id === activeTeacher.id) 
-    || facultyTeachers[0] 
-    || (activeTeacher.emp_id !== 'MIT-MASTER-ADMIN-01' ? activeTeacher : {
-        id: 'dean-01',
-        emp_id: 'MIT-DEAN-2012-0056',
-        full_name: 'Dr. Rajesh Kumar (School Dean)',
-        email: 'dean.soe@mituniversity.edu.in',
-        cadre: 'School Dean',
-        subject: 'School of Engineering & Technology',
-        current_school: 'School of Engineering (SOE)',
-        district: 'Rajbaug Campus',
-        block: 'Loni Kalbhor',
-        gpf_nps_no: 'PF-MIT-DEAN-056',
-        service_status: 'Active',
-        joining_date: '2018-06-01',
-        basic_pay: 144200,
-        seniority_rank: 1,
-        qualification: 'Ph.D. / M.Tech'
-      });
+  // For faculty role: strictly show ONLY the logged-in teacher's own service book.
+  // For admin/principal: allow browsing all faculty via a dropdown.
+  const isPrivilegedRole = role === 'admin' || role === 'principal';
 
-  const [selectedTeacherId, setSelectedTeacherId] = useState(defaultTeacher.id);
+  const defaultTeacher = facultyTeachers.find(t => t.id === activeTeacher.id)
+    || (isPrivilegedRole ? facultyTeachers[0] : activeTeacher) 
+    || activeTeacher;
 
-  const teacher = facultyTeachers.find(t => t.id === selectedTeacherId) || defaultTeacher;
+  const [selectedTeacherId, setSelectedTeacherId] = useState(defaultTeacher?.id);
+
+  // For non-privileged roles, always force the logged-in teacher regardless of selectedTeacherId
+  const teacher = isPrivilegedRole
+    ? (facultyTeachers.find(t => t.id === selectedTeacherId) || defaultTeacher)
+    : (facultyTeachers.find(t => t.id === activeTeacher.id) || activeTeacher);
+
   const isApplicant = teacher.emp_id?.startsWith('MIT-APP-') || teacher.cadre === 'Applicant';
 
   const handlePrint = () => {
@@ -69,7 +61,7 @@ export const ServiceBookModule = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {(role === 'admin' || role === 'principal') && facultyTeachers.length > 0 && (
+          {isPrivilegedRole && facultyTeachers.length > 0 && (
             <select
               value={selectedTeacherId}
               onChange={(e) => setSelectedTeacherId(e.target.value)}

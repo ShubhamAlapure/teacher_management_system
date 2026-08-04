@@ -239,9 +239,11 @@ export const AppProvider = ({ children }) => {
             seniority_rank: 99
           }
         : (teachers && teachers.length > 0)
-          // For teacher role, find by currentUser email/emp_id first, else teachers[0]
-          ? (resolvedEmail
-              ? teachers.find(t => t.email?.toLowerCase() === resolvedEmail.toLowerCase()) || teachers[0]
+          // For teacher role, find by currentUser emp_id first, then email, else teachers[0]
+          ? (currentUser?.emp_id
+              ? teachers.find(t => t.emp_id?.trim().toLowerCase() === currentUser.emp_id.trim().toLowerCase())
+                  || teachers.find(t => resolvedEmail && t.email?.toLowerCase() === resolvedEmail.toLowerCase())
+                  || teachers[0]
               : teachers[0])
           : {
               id: 'faculty-new',
@@ -916,8 +918,10 @@ export const AppProvider = ({ children }) => {
     }
 
     const userInfo = {
+      id: dbTeacherRecord.id,
       full_name: dbTeacherRecord.full_name || userFullName || 'Faculty Member',
       emp_id: dbTeacherRecord.emp_id,
+      email: dbTeacherRecord.email || '',
       role: actualRole
     };
 
