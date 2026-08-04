@@ -54,23 +54,23 @@ export const OverviewDashboard = () => {
     leaveBalances
   } = useApp();
 
-  const displayName = currentUser?.full_name || activeTeacher.full_name || 'MIT-ADT Staff';
-  const displayId = currentUser?.emp_id || activeTeacher.emp_id || 'MIT-USER-01';
+  const displayName = currentUser?.full_name || activeTeacher?.full_name || 'MIT-ADT Staff';
+  const displayId = currentUser?.emp_id || activeTeacher?.emp_id || 'MIT-USER-01';
 
-  const activeTransfersCount = transfers.length;
+  const activeTransfersCount = transfers?.length || 0;
   // For faculty: show only their own pending leaves
   const pendingLeavesCount = role === 'teacher'
-    ? leaves.filter(l => l.status === 'Pending' && (
-        l.teacher_id === activeTeacher.id ||
-        l.teacher_name === activeTeacher.full_name ||
-        l.teacher_id === currentUser?.emp_id
+    ? (leaves || []).filter(l => l?.status === 'Pending' && (
+        l?.teacher_id === activeTeacher?.id ||
+        l?.teacher_name === activeTeacher?.full_name ||
+        l?.teacher_id === currentUser?.emp_id
       )).length
-    : leaves.filter(l => l.status === 'Pending').length;
-  const pendingAppraisalCount = apars.filter(a => a.status !== 'Approved' && a.status !== 'Finalized').length;
-  const openVacanciesCount = vacancies.filter(v => v.status === 'Open').reduce((acc, v) => acc + v.total_posts, 0);
+    : (leaves || []).filter(l => l?.status === 'Pending').length;
+  const pendingAppraisalCount = (apars || []).filter(a => a?.status !== 'Approved' && a?.status !== 'Finalized').length;
+  const openVacanciesCount = (vacancies || []).filter(v => v?.status === 'Open').reduce((acc, v) => acc + (v?.total_posts || 0), 0);
 
   // Personal leave balances for faculty
-  const myLeaveBalance = leaveBalances?.[activeTeacher.id] || { casual: 8, medical: 10, earned: 14 };
+  const myLeaveBalance = (activeTeacher?.id && leaveBalances?.[activeTeacher.id]) || { casual: 8, medical: 10, earned: 14 };
 
   return (
     <div className="space-y-6 font-sans">
@@ -233,7 +233,7 @@ export const OverviewDashboard = () => {
                 </span>
                 <h2 className="text-2xl font-black tracking-tight">Welcome, {displayName}</h2>
                 <p className="text-xs text-purple-200">
-                  Employee ID: <strong className="font-mono text-yellow-300">{displayId}</strong> &bull; {activeTeacher.current_school || 'School of Engineering & Technology'}
+                  Employee ID: <strong className="font-mono text-yellow-300">{displayId}</strong> &bull; {activeTeacher?.current_school || 'School of Engineering & Technology'}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -333,19 +333,19 @@ export const OverviewDashboard = () => {
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100">
                   <p className="text-[10px] text-slate-500 font-bold uppercase">Department / School</p>
-                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher.current_school || 'School of Engineering & Technology'}</p>
+                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher?.current_school || 'School of Engineering & Technology'}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100">
                   <p className="text-[10px] text-slate-500 font-bold uppercase">Designation</p>
-                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher.cadre || 'Assistant Professor'}</p>
+                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher?.cadre || 'Assistant Professor'}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100">
                   <p className="text-[10px] text-slate-500 font-bold uppercase">Campus</p>
-                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher.district || 'Rajbaug Campus'}</p>
+                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher?.district || 'Rajbaug Campus'}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100">
                   <p className="text-[10px] text-slate-500 font-bold uppercase">Joining Date</p>
-                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher.joining_date || '—'}</p>
+                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher?.joining_date || '—'}</p>
                 </div>
               </div>
             </div>
