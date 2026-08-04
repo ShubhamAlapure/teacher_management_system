@@ -29,7 +29,7 @@ export const Sidebar = () => {
       id: 'recruitment', 
       label: 'Recruitment & Job Repository', 
       icon: UserPlus, 
-      roles: ['applicant', 'teacher', 'principal', 'admin'], 
+      roles: ['applicant', 'principal', 'admin'],  // hidden for faculty (teacher)
       locked: false,
       badge: (role === 'principal' || role === 'admin') && appointedCount > 0 ? appointedCount : null
     },
@@ -50,9 +50,9 @@ export const Sidebar = () => {
       id: 'transfers', 
       label: 'Posting & Transfers', 
       icon: ArrowLeftRight, 
-      roles: ['applicant', 'teacher', 'principal', 'admin'],
+      roles: ['principal', 'admin'],  // hidden for faculty & applicant
       badge: pendingTransfers > 0 ? pendingTransfers : null,
-      locked: role === 'applicant'
+      locked: false
     },
     { 
       id: 'leaves', 
@@ -71,8 +71,11 @@ export const Sidebar = () => {
       badge: pendingDocs > 0 ? pendingDocs : null,
       locked: false 
     },
-    { id: 'analytics', label: 'Reports & Analytics', icon: BarChart3, roles: ['applicant', 'teacher', 'principal', 'admin'], locked: role === 'applicant' || role === 'teacher' }
+    { id: 'analytics', label: 'Reports & Analytics', icon: BarChart3, roles: ['principal', 'admin'], locked: false }
   ];
+
+  // Filter menu items to only show those relevant to the current role
+  const visibleMenuItems = menuItems.filter(item => item.roles.includes(role));
 
   return (
     <aside className="w-64 bg-white border-r border-purple-100 shrink-0 hidden lg:flex flex-col justify-between p-4 min-h-[calc(100vh-65px)] shadow-sm">
@@ -81,7 +84,7 @@ export const Sidebar = () => {
         {/* Sidebar Navigation (Matching screenshot menu styling) */}
         <div>
           <nav className="space-y-1">
-            {menuItems.map((item) => {
+            {visibleMenuItems.map((item) => {
               const IconComp = item.icon;
               const isActive = activeTab === item.id;
               return (
@@ -119,19 +122,20 @@ export const Sidebar = () => {
           </nav>
         </div>
 
-        {/* Lock Info Box (Matching screenshot yellow alert box in sidebar) */}
-        <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] space-y-1.5 shadow-sm">
-          <div className="flex items-center gap-1.5 font-bold text-amber-900">
-            <Lock className="w-3.5 h-3.5 text-amber-700" />
-            <span>Role-Based Access</span>
+        {/* Lock Info Box — only shown to applicants and privileged roles, not plain faculty */}
+        {role !== 'teacher' && (
+          <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] space-y-1.5 shadow-sm">
+            <div className="flex items-center gap-1.5 font-bold text-amber-900">
+              <Lock className="w-3.5 h-3.5 text-amber-700" />
+              <span>Role-Based Access</span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-amber-800">
+              {role === 'applicant' && 'Department transfers & payslips unlock after faculty appointment.'}
+              {role === 'principal' && 'Department-level HOD approvals active.'}
+              {role === 'admin' && 'University-wide Registrar administrative access unlocked.'}
+            </p>
           </div>
-          <p className="text-[11px] leading-relaxed text-amber-800">
-            {role === 'applicant' && 'Department transfers & payslips unlock after faculty appointment.'}
-            {role === 'teacher' && 'University Analytics unlock for HOD/Dean & Registrar roles.'}
-            {role === 'principal' && 'Department-level HOD approvals active.'}
-            {role === 'admin' && 'University-wide Registrar administrative access unlocked.'}
-          </p>
-        </div>
+        )}
 
       </div>
 

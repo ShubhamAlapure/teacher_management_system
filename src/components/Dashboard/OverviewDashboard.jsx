@@ -47,16 +47,27 @@ export const OverviewDashboard = () => {
     setActiveTab, 
     role, 
     activeTeacher,
-    currentUser 
+    currentUser,
+    leaveBalances
   } = useApp();
 
   const displayName = currentUser?.full_name || activeTeacher.full_name || 'MIT-ADT Staff';
   const displayId = currentUser?.emp_id || activeTeacher.emp_id || 'MIT-USER-01';
 
   const activeTransfersCount = transfers.length;
-  const pendingLeavesCount = leaves.filter(l => l.status === 'Pending').length;
+  // For faculty: show only their own pending leaves
+  const pendingLeavesCount = role === 'teacher'
+    ? leaves.filter(l => l.status === 'Pending' && (
+        l.teacher_id === activeTeacher.id ||
+        l.teacher_name === activeTeacher.full_name ||
+        l.teacher_id === currentUser?.emp_id
+      )).length
+    : leaves.filter(l => l.status === 'Pending').length;
   const pendingAppraisalCount = apars.filter(a => a.status !== 'Approved' && a.status !== 'Finalized').length;
   const openVacanciesCount = vacancies.filter(v => v.status === 'Open').reduce((acc, v) => acc + v.total_posts, 0);
+
+  // Personal leave balances for faculty
+  const myLeaveBalance = leaveBalances?.[activeTeacher.id] || { casual: 8, medical: 10, earned: 14 };
 
   return (
     <div className="space-y-6 font-sans">
@@ -206,8 +217,169 @@ export const OverviewDashboard = () => {
         </div>
       )}
 
-      {/* 3. Master Admin & Faculty Dashboard */}
-      {(role === 'admin' || role === 'teacher') && (
+      {/* 3. Faculty (Teacher) Personal Dashboard */}
+      {role === 'teacher' && (
+        <div className="space-y-6">
+          {/* Welcome Banner */}
+          <div className="bg-gradient-to-r from-purple-800 via-purple-900 to-indigo-900 text-white rounded-3xl p-6 shadow-xl border border-purple-700/40 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #a78bfa 0%, transparent 60%)' }} />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-white/20 text-purple-100 border border-white/20 uppercase tracking-wider">
+                  Faculty Portal — MIT-ADT University
+                </span>
+                <h2 className="text-2xl font-black tracking-tight">Welcome, {displayName}</h2>
+                <p className="text-xs text-purple-200">
+                  Employee ID: <strong className="font-mono text-yellow-300">{displayId}</strong> &bull; {activeTeacher.current_school || 'School of Engineering & Technology'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="px-4 py-2 rounded-2xl bg-white/10 border border-white/20 text-center">
+                  <p className="text-[10px] font-bold text-purple-200 uppercase">Leave Balance</p>
+                  <p className="text-lg font-black text-white">{(myLeaveBalance.casual || 0) + (myLeaveBalance.earned || 0)} Days</p>
+                </div>
+                <div className="px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-400/30 text-center">
+                  <p className="text-[10px] font-bold text-amber-200 uppercase">Pending</p>
+                  <p className="text-lg font-black text-amber-300">{pendingLeavesCount}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Action Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div
+              onClick={() => setActiveTab('service_book')}
+              className="p-5 rounded-2xl bg-purple-50 border border-purple-100 cursor-pointer hover:shadow-md hover:border-purple-300 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-extrabold text-purple-950">My Service Book</h4>
+                  <BookOpen className="w-4 h-4 text-purple-600" />
+                </div>
+                <p className="text-xs text-purple-800 mt-1">View your verified career service history</p>
+              </div>
+              <div className="mt-4 flex items-center justify-end text-xs font-extrabold text-purple-700">
+                Open &rarr;
+              </div>
+            </div>
+
+            <div
+              onClick={() => setActiveTab('leaves')}
+              className="p-5 rounded-2xl bg-blue-50 border border-blue-100 cursor-pointer hover:shadow-md hover:border-blue-300 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-extrabold text-blue-950">Leaves & Payroll</h4>
+                  <Clock className="w-4 h-4 text-blue-600" />
+                </div>
+                <p className="text-xs text-blue-800 mt-1">Apply for leave &bull; {pendingLeavesCount} pending</p>
+              </div>
+              <div className="mt-4 flex items-center justify-end text-xs font-extrabold text-blue-700">
+                Apply &rarr;
+              </div>
+            </div>
+
+            <div
+              onClick={() => setActiveTab('training')}
+              className="p-5 rounded-2xl bg-emerald-50 border border-emerald-100 cursor-pointer hover:shadow-md hover:border-emerald-300 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-extrabold text-emerald-950">Training & APAR</h4>
+                  <Award className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-xs text-emerald-800 mt-1">Appraisals &bull; {pendingAppraisalCount} under review</p>
+              </div>
+              <div className="mt-4 flex items-center justify-end text-xs font-extrabold text-emerald-700">
+                View &rarr;
+              </div>
+            </div>
+
+            <div
+              onClick={() => setActiveTab('documents')}
+              className="p-5 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-extrabold text-slate-800">Document Vault</h4>
+                  <FileText className="w-4 h-4 text-slate-500" />
+                </div>
+                <p className="text-xs text-slate-600 mt-1">Upload degrees, certificates & publications</p>
+              </div>
+              <div className="mt-4 flex items-center justify-end text-xs font-extrabold text-slate-600">
+                Upload &rarr;
+              </div>
+            </div>
+          </div>
+
+          {/* Profile + Leave Balance Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Faculty Profile Card */}
+            <div className="lg:col-span-2 bg-white rounded-2xl border border-purple-100 p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-purple-100 pb-3">
+                <h3 className="text-base font-extrabold text-purple-950">My Profile</h3>
+                <button
+                  onClick={() => setActiveTab('service_book')}
+                  className="px-3 py-1 rounded-full text-xs font-bold border border-purple-200 text-purple-700 hover:bg-purple-50"
+                >
+                  Edit Profile
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100">
+                  <p className="text-[10px] text-slate-500 font-bold uppercase">Department / School</p>
+                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher.current_school || 'School of Engineering & Technology'}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100">
+                  <p className="text-[10px] text-slate-500 font-bold uppercase">Designation</p>
+                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher.cadre || 'Assistant Professor'}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100">
+                  <p className="text-[10px] text-slate-500 font-bold uppercase">Campus</p>
+                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher.district || 'Rajbaug Campus'}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100">
+                  <p className="text-[10px] text-slate-500 font-bold uppercase">Joining Date</p>
+                  <p className="font-extrabold text-slate-900 mt-1">{activeTeacher.joining_date || '—'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Leave Balance Card */}
+            <div className="bg-white rounded-2xl border border-purple-100 p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-purple-100 pb-3">
+                <h3 className="text-sm font-extrabold text-purple-950">Leave Balance 2026</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-600 text-white">Active</span>
+              </div>
+              <div className="space-y-3 text-xs">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50 border border-blue-100">
+                  <span className="font-bold text-blue-900">Casual Leave (CL)</span>
+                  <span className="font-extrabold text-blue-700">{myLeaveBalance.casual || 8} Days</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                  <span className="font-bold text-emerald-900">Earned Leave (EL)</span>
+                  <span className="font-extrabold text-emerald-700">{myLeaveBalance.earned || 14} Days</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-purple-50 border border-purple-100">
+                  <span className="font-bold text-purple-900">Medical Leave (ML)</span>
+                  <span className="font-extrabold text-purple-700">{myLeaveBalance.medical || 10} Days</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveTab('leaves')}
+                className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold shadow-sm transition-all"
+              >
+                Apply for Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Master Admin Dashboard */}
+      {role === 'admin' && (
         <>
           {/* Progress Stepper Bar */}
           <div className="bg-white rounded-2xl border border-purple-100 p-4 shadow-sm">
