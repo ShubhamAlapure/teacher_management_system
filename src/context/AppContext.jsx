@@ -490,15 +490,24 @@ export const AppProvider = ({ children }) => {
 
   // 5. Submit Leave Application
   const addLeaveRequest = async (leaveData) => {
-    const teacherName = activeTeacher.full_name || currentUser?.full_name || 'Faculty Member';
+    // Resolve teacher name with multiple fallbacks to avoid storing generic 'Faculty Member'
+    const resolvedTeacher = teachers.find(t =>
+      t.emp_id === currentUser?.emp_id || t.id === activeTeacher.id
+    );
+    const teacherName = currentUser?.full_name
+      || resolvedTeacher?.full_name
+      || activeTeacher.full_name
+      || 'Faculty Member';
+    const teacherId = activeTeacher.id || resolvedTeacher?.id || currentUser?.emp_id;
     const newLeave = {
       id: `lv-${Date.now()}`,
-      teacher_id: activeTeacher.id || currentUser?.emp_id,
+      teacher_id: teacherId,
       teacher_name: teacherName,
       status: 'Pending',
       created_at: new Date().toISOString().split('T')[0],
       ...leaveData
     };
+
 
     setLeaves(prev => [newLeave, ...prev]);
 

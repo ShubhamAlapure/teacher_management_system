@@ -19,6 +19,7 @@ export const LeavePayrollModule = () => {
     updateLeaveStatus, 
     activeTeacher, 
     currentUser,
+    teachers,
     role 
   } = useApp();
 
@@ -27,6 +28,17 @@ export const LeavePayrollModule = () => {
   const [selectedPayslip, setSelectedPayslip] = useState(null);
 
   const isPrivilegedRole = role === 'admin' || role === 'principal';
+
+  // Resolve displayed teacher name: use stored name if valid, otherwise look up by teacher_id
+  const resolveTeacherName = (l) => {
+    const stored = l.teacher_name;
+    if (stored && stored !== 'Faculty Member' && stored !== 'Faculty' && stored.trim() !== '') {
+      return stored;
+    }
+    // Fallback: look up by teacher_id in the teachers list
+    const found = teachers.find(t => t.id === l.teacher_id || t.emp_id === l.teacher_id);
+    return found?.full_name || stored || 'Unknown Faculty';
+  };
 
   const teacherBalance = leaveBalances[activeTeacher.id] || { casual: 8, medical: 10, earned: 14, maternity_paternity: 180 };
 
@@ -191,7 +203,7 @@ export const LeavePayrollModule = () => {
                     </tr>
                   ) : visibleLeaves.map((l) => (
                     <tr key={l.id} className="hover:bg-purple-50/50">
-                      <td className="p-3 font-extrabold text-slate-900">{l.teacher_name || 'Faculty Member'}</td>
+                      <td className="p-3 font-extrabold text-slate-900">{resolveTeacherName(l)}</td>
                       <td className="p-3 text-purple-900 font-bold">{l.leave_type}</td>
                       <td className="p-3 text-slate-600">{l.start_date} to {l.end_date}</td>
                       <td className="p-3 font-extrabold text-slate-900">{l.total_days} Days</td>
