@@ -479,19 +479,54 @@ export const AppProvider = ({ children }) => {
     pushNotification('Transfer Submitted', `Transfer request to ${trfData.target_district} logged successfully.`, 'info');
   };
 
-  // 4. Update Transfer Status
+  // 4. Update Transfer Status & Re-assign Faculty Posting on Approval
   const updateTransferStatus = async (trfId, status, remarks = '', recommendation = true) => {
+    let targetTrf = transfers.find(t => t.id === trfId);
+
     setTransfers(prev => prev.map(t => {
       if (t.id === trfId) {
-        return {
+        const updated = {
           ...t,
           status,
           principal_recommendation: recommendation,
           principal_remarks: remarks || t.principal_remarks
         };
+        targetTrf = updated;
+        return updated;
       }
       return t;
     }));
+
+    // When a transfer is Approved by Dean/HOD or Admin, automatically reassign the teacher's current school/dept
+    if (status === 'Approved' && targetTrf) {
+      const targetTeacherId = targetTrf.teacher_id;
+      const newPosting = targetTrf.target_school || targetTrf.target_district;
+      const newDistrict = targetTrf.target_district;
+
+      setTeachers(prev => prev.map(tch => {
+        if (tch.id === targetTeacherId || tch.emp_id === targetTeacherId) {
+          return {
+            ...tch,
+            current_school: newPosting,
+            district: newDistrict,
+            department: newPosting
+          };
+        }
+        return tch;
+      }));
+
+      if (isSupabaseConfigured && supabase) {
+        try {
+          await supabase.from('teachers').update({
+            current_school: newPosting,
+            district: newDistrict,
+            department: newPosting
+          }).or(`id.eq.${targetTeacherId},emp_id.eq.${targetTeacherId}`);
+        } catch (err) {
+          console.error('Supabase teacher posting update error:', err);
+        }
+      }
+    }
 
     if (isSupabaseConfigured && supabase) {
       try {
@@ -505,7 +540,10 @@ export const AppProvider = ({ children }) => {
       }
     }
 
-    pushNotification('Transfer Workflow', `Transfer ${trfId} updated to ${status}.`, 'success');
+    const notifMsg = status === 'Approved' 
+      ? `Transfer approved! Faculty posted to ${targetTrf?.target_district || 'new department'}.`
+      : `Transfer application updated to ${status}.`;
+    pushNotification('Transfer Workflow', notifMsg, status === 'Approved' ? 'success' : 'info');
   };
 
   // 5. Submit Leave Application
