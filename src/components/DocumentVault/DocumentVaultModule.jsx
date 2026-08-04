@@ -118,13 +118,13 @@ export const DocumentVaultModule = () => {
             // Admin and Principal/HOD can see ALL documents
             if (role === 'admin' || role === 'principal') return true;
             // Applicants and teachers can only see their OWN uploaded documents
-            const myId = currentUser?.emp_id || currentUser?.id || activeTeacher.emp_id || activeTeacher.id;
+            const myId = currentUser?.emp_id || currentUser?.id || activeTeacher?.emp_id || activeTeacher?.id;
             return (
-              doc.teacher_id === myId ||
-              doc.teacher_id === currentUser?.id ||
-              doc.teacher_id === activeTeacher.id ||
-              doc.teacher_name === currentUser?.full_name ||
-              doc.teacher_name === activeTeacher.full_name
+              doc?.teacher_id === myId ||
+              doc?.teacher_id === currentUser?.id ||
+              (activeTeacher?.id && doc?.teacher_id === activeTeacher.id) ||
+              doc?.teacher_name === currentUser?.full_name ||
+              (activeTeacher?.full_name && doc?.teacher_name === activeTeacher.full_name)
             );
           })
           .map((doc) => {
@@ -206,14 +206,14 @@ export const DocumentVaultModule = () => {
           })
         }
         {/* Empty state for applicants with no own documents */}
-        {(role === 'applicant' || role === 'teacher') && documents.filter(doc => {
-          const myId = currentUser?.emp_id || currentUser?.id || activeTeacher.emp_id || activeTeacher.id;
+        {(role === 'applicant' || role === 'teacher') && (documents || []).filter(doc => {
+          const myId = currentUser?.emp_id || currentUser?.id || activeTeacher?.emp_id || activeTeacher?.id;
           return (
-            doc.teacher_id === myId ||
-            doc.teacher_id === currentUser?.id ||
-            doc.teacher_id === activeTeacher.id ||
-            doc.teacher_name === currentUser?.full_name ||
-            doc.teacher_name === activeTeacher.full_name
+            doc?.teacher_id === myId ||
+            doc?.teacher_id === currentUser?.id ||
+            (activeTeacher?.id && doc?.teacher_id === activeTeacher.id) ||
+            doc?.teacher_name === currentUser?.full_name ||
+            (activeTeacher?.full_name && doc?.teacher_name === activeTeacher.full_name)
           );
         }).length === 0 && (
           <div className="col-span-3 py-16 flex flex-col items-center text-center text-slate-400 gap-3">

@@ -26,9 +26,9 @@ export const Navbar = () => {
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
-  const displayName = currentUser?.full_name || activeTeacher.full_name || 'MIT-ADT Staff';
-  const displayId = currentUser?.emp_id || activeTeacher.emp_id || 'MIT-USER-01';
-  const userInitials = displayName.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
+  const displayName = currentUser?.full_name || activeTeacher?.full_name || 'MIT-ADT Staff';
+  const displayId = currentUser?.emp_id || activeTeacher?.emp_id || 'MIT-USER-01';
+  const userInitials = (displayName || 'U').split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
   const [editForm, setEditForm] = useState({
     full_name: currentUser?.full_name || displayName,

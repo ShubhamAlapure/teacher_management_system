@@ -28,18 +28,19 @@ export const ServiceBookModule = () => {
   // For admin/principal: allow browsing all faculty via a dropdown.
   const isPrivilegedRole = role === 'admin' || role === 'principal';
 
-  const defaultTeacher = facultyTeachers.find(t => t.id === activeTeacher.id)
+  const defaultTeacher = (activeTeacher?.id && facultyTeachers.find(t => t.id === activeTeacher.id))
     || (isPrivilegedRole ? facultyTeachers[0] : activeTeacher) 
-    || activeTeacher;
+    || activeTeacher
+    || {};
 
   const [selectedTeacherId, setSelectedTeacherId] = useState(defaultTeacher?.id);
 
   // For non-privileged roles, always force the logged-in teacher regardless of selectedTeacherId
   const teacher = isPrivilegedRole
     ? (facultyTeachers.find(t => t.id === selectedTeacherId) || defaultTeacher)
-    : (facultyTeachers.find(t => t.id === activeTeacher.id) || activeTeacher);
+    : (activeTeacher?.id ? (facultyTeachers.find(t => t.id === activeTeacher.id) || activeTeacher) : defaultTeacher);
 
-  const isApplicant = teacher.emp_id?.startsWith('MIT-APP-') || teacher.cadre === 'Applicant';
+  const isApplicant = teacher?.emp_id?.startsWith('MIT-APP-') || teacher?.cadre === 'Applicant';
 
   const handlePrint = () => {
     window.print();

@@ -40,24 +40,24 @@ export const LeavePayrollModule = () => {
     return found?.full_name || stored || 'Unknown Faculty';
   };
 
-  const teacherBalance = leaveBalances[activeTeacher.id] || { casual: 8, medical: 10, earned: 14, maternity_paternity: 180 };
+  const teacherBalance = (activeTeacher?.id && leaveBalances?.[activeTeacher.id]) || { casual: 8, medical: 10, earned: 14, maternity_paternity: 180 };
 
   // For faculty: show only their own leaves. For admin/principal: show all.
   const visibleLeaves = isPrivilegedRole
-    ? leaves
-    : leaves.filter(l =>
-        l.teacher_id === activeTeacher.id ||
-        l.teacher_id === currentUser?.emp_id ||
-        l.teacher_name === activeTeacher.full_name
+    ? (leaves || [])
+    : (leaves || []).filter(l =>
+        l?.teacher_id === activeTeacher?.id ||
+        l?.teacher_id === currentUser?.emp_id ||
+        l?.teacher_name === activeTeacher?.full_name
       );
 
   // For faculty: show only their own payroll. For admin/principal: show all.
   const visiblePayroll = isPrivilegedRole
-    ? payroll
-    : payroll.filter(p =>
-        p.teacher_id === activeTeacher.id ||
-        p.emp_id === currentUser?.emp_id ||
-        p.teacher_name === activeTeacher.full_name
+    ? (payroll || [])
+    : (payroll || []).filter(p =>
+        p?.teacher_id === activeTeacher?.id ||
+        p?.emp_id === currentUser?.emp_id ||
+        p?.teacher_name === activeTeacher?.full_name
       );
 
   const [leaveForm, setLeaveForm] = useState({

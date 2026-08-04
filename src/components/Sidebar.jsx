@@ -18,10 +18,10 @@ export const Sidebar = () => {
   const { activeTab, setActiveTab, role, transfers, leaves, documents, applications, teachers, logout } = useApp();
 
   // Pending Counts for Badges
-  const pendingTransfers = transfers.filter(t => t.status.includes('Pending')).length;
-  const pendingLeaves = leaves.filter(l => l.status === 'Pending').length;
-  const pendingDocs = documents.filter(d => d.status === 'Pending').length;
-  const appointedCount = applications.filter(a => a.status === 'Appointed').length;
+  const pendingTransfers = (transfers || []).filter(t => t?.status?.includes('Pending')).length;
+  const pendingLeaves = (leaves || []).filter(l => l?.status === 'Pending').length;
+  const pendingDocs = (documents || []).filter(d => d?.status === 'Pending').length;
+  const appointedCount = (applications || []).filter(a => a?.status === 'Appointed').length;
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['applicant', 'teacher', 'principal', 'admin'], locked: false },
