@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Navbar } from './components/layout/Navbar';
-import { Footer } from './components/layout/Footer';
+import { Sidebar } from './components/layout/Sidebar';
 import { HomePage } from './pages/HomePage';
 import { DocumentSelectionPage } from './pages/DocumentSelectionPage';
 import { UndertakingFormPage } from './pages/UndertakingFormPage';
 import { NOCFormPage } from './pages/NOCFormPage';
 import { DocumentPreviewPage } from './pages/DocumentPreviewPage';
-import { FileText, Shield, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Shield, CheckCircle2, ArrowRight } from 'lucide-react';
 import './index.css';
 import './print.css';
 
@@ -14,6 +14,7 @@ export const App = () => {
   const [currentRoute, setCurrentRoute] = useState('home'); // 'home' | 'documents' | 'undertaking' | 'noc' | 'preview' | 'about'
   const [activeDocType, setActiveDocType] = useState('undertaking');
   const [previewData, setPreviewData] = useState(null);
+  const [userRole, setUserRole] = useState('Student'); // 'Student' | 'Dean'
 
   const handleNavigate = (route) => {
     setCurrentRoute(route);
@@ -51,109 +52,122 @@ export const App = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleToggleRole = () => {
+    setUserRole(prev => prev === 'Student' ? 'Dean' : 'Student');
+  };
+
   return (
-    <div className="app-container">
-      {/* Global Navbar */}
-      <Navbar currentRoute={currentRoute} onNavigate={handleNavigate} />
+    <div className="portal-layout">
+      {/* Top Navigation Bar */}
+      <Navbar 
+        currentRoute={currentRoute} 
+        onNavigate={handleNavigate} 
+        userRole={userRole}
+      />
 
-      {/* Main Content Router */}
-      <main className="main-content">
-        {currentRoute === 'home' && (
-          <HomePage 
-            onNavigate={handleNavigate} 
-            onSelectDocument={handleSelectDocument} 
-          />
-        )}
+      {/* Main Body: Sidebar + Main Content Area */}
+      <div className="portal-body-wrapper">
+        {/* Left Sidebar */}
+        <Sidebar 
+          currentRoute={currentRoute} 
+          onNavigate={handleNavigate} 
+          userRole={userRole}
+          onToggleRole={handleToggleRole}
+        />
 
-        {currentRoute === 'documents' && (
-          <DocumentSelectionPage 
-            onSelectDocument={handleSelectDocument} 
-          />
-        )}
+        {/* Content Area */}
+        <main className="portal-main-area">
+          {currentRoute === 'home' && (
+            <HomePage 
+              onNavigate={handleNavigate} 
+              onSelectDocument={handleSelectDocument} 
+              userRole={userRole}
+            />
+          )}
 
-        {currentRoute === 'undertaking' && (
-          <UndertakingFormPage 
-            onGeneratePreview={handleGeneratePreview}
-            onBack={() => handleNavigate('documents')}
-          />
-        )}
+          {currentRoute === 'documents' && (
+            <DocumentSelectionPage 
+              onSelectDocument={handleSelectDocument} 
+            />
+          )}
 
-        {currentRoute === 'noc' && (
-          <NOCFormPage 
-            onGeneratePreview={handleGeneratePreview}
-            onBack={() => handleNavigate('documents')}
-          />
-        )}
+          {currentRoute === 'undertaking' && (
+            <UndertakingFormPage 
+              onGeneratePreview={handleGeneratePreview}
+              onBack={() => handleNavigate('documents')}
+            />
+          )}
 
-        {currentRoute === 'preview' && (
-          <DocumentPreviewPage
-            docType={activeDocType}
-            formData={previewData}
-            onEdit={handleEditDetails}
-            onStartNew={handleStartNew}
-          />
-        )}
+          {currentRoute === 'noc' && (
+            <NOCFormPage 
+              onGeneratePreview={handleGeneratePreview}
+              onBack={() => handleNavigate('documents')}
+            />
+          )}
 
-        {currentRoute === 'about' && (
-          <div className="animate-fade-in" style={{ padding: '4rem 0 6rem 0' }}>
-            <div className="container container-narrow">
-              <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                <span className="badge badge-primary" style={{ marginBottom: '0.5rem' }}>About InternDocs</span>
-                <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--navy-900)' }}>
-                  Student Internship Document Generation System
+          {currentRoute === 'preview' && (
+            <DocumentPreviewPage
+              docType={activeDocType}
+              formData={previewData}
+              onEdit={handleEditDetails}
+              onStartNew={handleStartNew}
+            />
+          )}
+
+          {currentRoute === 'about' && (
+            <div className="animate-fade-in" style={{ maxWidth: '900px', margin: '0 auto' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <span className="badge badge-primary" style={{ marginBottom: '0.5rem' }}>Guidelines & Policies</span>
+                <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--purple-950)' }}>
+                  MIT-ADT School of Computing Documentation System
                 </h1>
-                <p style={{ color: 'var(--slate-600)', fontSize: '1.1rem', marginTop: '0.5rem' }}>
+                <p style={{ color: 'var(--slate-600)', fontSize: '0.95rem', marginTop: '0.25rem' }}>
                   Tagline: <strong>"Generate. Preview. Print."</strong>
                 </p>
               </div>
 
-              <div className="card" style={{ padding: '2.5rem', marginBottom: '2rem' }}>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--navy-900)', marginBottom: '1rem' }}>
-                  Institutional Mission
+              <div className="card" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--purple-950)', marginBottom: '0.75rem' }}>
+                  Official Institutional Formats
                 </h2>
-                <p style={{ color: 'var(--slate-700)', lineHeight: 1.7, marginBottom: '1.5rem' }}>
-                  InternDocs simplifies the creation of official university documentation for students undergoing industrial training and corporate internships. Instead of struggling with manual document formatting, messy word processors, or inconsistent letterhead layouts, students can enter their credentials once and generate pixel-perfect, institutionally approved documents ready for submission.
+                <p style={{ color: 'var(--slate-700)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  InternDocs generates official university-compliant documents matching the standard formats established by MIT Art, Design and Technology University, School of Computing, Pune.
                 </p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
-                  <div style={{ padding: '1.25rem', backgroundColor: 'var(--slate-50)', borderRadius: 'var(--radius-md)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, color: 'var(--navy-900)', marginBottom: '0.5rem' }}>
-                      <CheckCircle2 size={18} color="var(--primary-600)" />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginTop: '1.5rem' }}>
+                  <div style={{ padding: '1.25rem', backgroundColor: 'var(--purple-50)', borderRadius: 'var(--radius-md)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, color: 'var(--purple-950)', marginBottom: '0.4rem' }}>
+                      <CheckCircle2 size={16} color="var(--purple-600)" />
                       100% Institutional Compliance
                     </div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--slate-600)' }}>
-                      Preserves exact clauses, margins, headings, signatory layouts, and university seal formatting.
+                    <p style={{ fontSize: '0.825rem', color: 'var(--slate-600)' }}>
+                      Preserves exact clauses I to IX, signatories, letterheads, and Central T&P seal.
                     </p>
                   </div>
 
-                  <div style={{ padding: '1.25rem', backgroundColor: 'var(--slate-50)', borderRadius: 'var(--radius-md)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, color: 'var(--navy-900)', marginBottom: '0.5rem' }}>
-                      <Shield size={18} color="var(--success-600)" />
-                      Zero Data Privacy Leakage
+                  <div style={{ padding: '1.25rem', backgroundColor: 'var(--purple-50)', borderRadius: 'var(--radius-md)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, color: 'var(--purple-950)', marginBottom: '0.4rem' }}>
+                      <Shield size={16} color="var(--purple-600)" />
+                      Client-Side Privacy Guaranteed
                     </div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--slate-600)' }}>
-                      All data processing, PDF compilation, and printing occurs directly in your local browser runtime.
+                    <p style={{ fontSize: '0.825rem', color: 'var(--slate-600)' }}>
+                      Student records and document compilations run locally without transmitting private credentials.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div style={{ textAlign: 'center' }}>
-                <button
-                  onClick={() => handleNavigate('documents')}
-                  className="btn btn-primary btn-lg"
-                >
-                  Explore Document Templates
-                  <ArrowRight size={18} />
-                </button>
-              </div>
+              <button
+                onClick={() => handleNavigate('documents')}
+                className="btn btn-primary btn-lg"
+              >
+                Go to Document Selection
+                <ArrowRight size={18} />
+              </button>
             </div>
-          </div>
-        )}
-      </main>
-
-      {/* Global Footer */}
-      <Footer onNavigate={handleNavigate} />
+          )}
+        </main>
+      </div>
     </div>
   );
 };

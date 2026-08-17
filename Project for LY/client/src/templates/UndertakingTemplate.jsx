@@ -1,209 +1,209 @@
 import React from 'react';
 import { DocumentHeader, DocumentFooter } from './DocumentHeaderFooter';
-import { formatDateForDoc } from '../utils/validation';
+import { formatDateForDoc, formatDateShort } from '../utils/validation';
 
 export const UndertakingTemplate = ({ data = {} }) => {
   const {
-    studentName = "Shubham Santosh Alapure",
-    salutation = "Mr.",
-    className = "B.Tech Final Year (Computer Science & Engineering)",
-    rollNumber = "CS2022-084",
-    enrollmentNumber = "MITADT2022CS084",
-    department = "Department of Computer Science & Engineering",
-    universityName = "MIT Art, Design and Technology University, Pune",
-    schoolName = "School of Computing",
-    companyName = "Google Cloud Platform / DeepMind Technologies",
-    internshipRole = "Software Engineering Intern - Cloud AI",
+    studentName = "Shrawan Mokale",
+    className = "AIA-3",
+    rollNumber = "47",
+    enrollmentNumber = "ADT23SOCA1062",
+    department = "AIA",
+    universityName = "MIT Art, Design & Technology University, Pune",
+    schoolName = "School of Computing, Pune",
+    
+    companyName = "Assisto AI Technologies",
     duration = "6 Months",
-    startDate = "2026-01-05",
-    endDate = "2026-06-30",
-    location = "Bangalore / Hybrid",
-    contactNumber = "9876543210",
-    email = "shubham.alapure@mitadt.edu.in",
-    documentDate = new Date().toISOString().split('T')[0],
-    mentorName = "Dr. Rajesh K. Sharma"
+    startDate = "2026-07-30",
+    endDate = "2026-12-30",
+    startDateDisplay = "30th July",
+    endDateDisplay = "30th December",
+    
+    contactNumber = "9834248040",
+    documentDate = "2026-08-03",
+    documentDateDisplay = "3/08/26"
   } = data;
 
-  const pronoun = salutation === "Ms." || salutation === "Mrs." ? "she" : "he";
-  const possessive = salutation === "Ms." || salutation === "Mrs." ? "her" : "his";
+  const displayDate = documentDateDisplay || formatDateShort(documentDate) || "3/08/26";
+  const displayStart = startDateDisplay || formatDateForDoc(startDate) || "30th July";
+  const displayEnd = endDateDisplay || formatDateForDoc(endDate) || "30th December";
 
   return (
-    <div className="a4-document-paper" id="undertaking-document">
-      {/* University Institutional Header */}
-      <DocumentHeader 
-        universityName={universityName || "MIT Art, Design and Technology University, Pune"} 
-        schoolName={schoolName || "School of Computing"}
-        department={department || "Department of Computer Science & Engineering"}
-      />
+    <div className="a4-document-paper" id="undertaking-document" style={{
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      minHeight: '297mm',
+      boxSizing: 'border-box'
+    }}>
+      <div>
+        {/* Institutional Header */}
+        <DocumentHeader 
+          universityName={universityName}
+          schoolName={schoolName}
+        />
 
-      {/* Date Row */}
-      <div className="doc-ref-date-row" style={{ justifyContent: 'flex-end' }}>
-        <div>
-          <span>Date: </span>
-          <span className="doc-dynamic-text">{formatDateForDoc(documentDate)}</span>
-        </div>
-      </div>
-
-      {/* Title */}
-      <div className="doc-title-center-wrap">
-        <div className="doc-main-title">
-          INTERNSHIP UNDERTAKING
-        </div>
-      </div>
-
-      {/* Formal Salutation & Preamble */}
-      <div style={{ marginBottom: '10px', fontSize: '10pt', fontFamily: 'var(--font-doc-serif)' }}>
-        <div>To,</div>
-        <div style={{ fontWeight: '700' }}>The Head of Department / Academic Mentor,</div>
-        <div>{schoolName}, {universityName}</div>
-      </div>
-
-      {/* Student & Internship Context Paragraph */}
-      <p className="doc-body-paragraph">
-        I, <span className="doc-dynamic-text">{salutation} {studentName}</span>, a bona fide student of class <span className="doc-dynamic-text">{className}</span>, 
-        bearing Roll No. <span className="doc-dynamic-text">{rollNumber}</span> and University Enrollment No. <span className="doc-dynamic-text">{enrollmentNumber}</span> of the 
-        <span className="doc-dynamic-text"> {department}</span> at <span className="doc-dynamic-text">{universityName}</span>, have received an internship offer 
-        from <span className="doc-dynamic-text">{companyName}</span> for the position of <span className="doc-dynamic-text">{internshipRole}</span> for a tenure of 
-        <span className="doc-dynamic-text"> {duration}</span> from <span className="doc-dynamic-text">{formatDateForDoc(startDate)}</span> to <span className="doc-dynamic-text">{formatDateForDoc(endDate)}</span> located 
-        at <span className="doc-dynamic-text">{location}</span>.
-      </p>
-
-      <p className="doc-body-paragraph" style={{ marginBottom: '8px' }}>
-        I hereby solemnly declare, accept, and submit this undertaking with full consciousness of the following terms and regulations:
-      </p>
-
-      {/* Undertaking Points I to IX */}
-      <ul className="doc-points-list">
-        <li className="doc-point-item">
-          <span className="doc-point-num">I.</span>
-          <span>
-            I will strictly abide by all institutional rules, university code of conduct, and corporate policies of <strong>{companyName}</strong> throughout my internship tenure.
-          </span>
-        </li>
-        <li className="doc-point-item">
-          <span className="doc-point-num">II.</span>
-          <span>
-            I will maintain regular communication with my allocated academic mentor (<strong>{mentorName}</strong>) and submit fortnightly progress reports, attendance logs, and project milestones on time.
-          </span>
-        </li>
-        <li className="doc-point-item">
-          <span className="doc-point-num">III.</span>
-          <span>
-            I understand that completion of all academic deliverables, semester examinations, presentations, and viva-voce is solely my responsibility and I will appear for the same as per university schedules.
-          </span>
-        </li>
-        <li className="doc-point-item">
-          <span className="doc-point-num">IV.</span>
-          <span>
-            I shall not engage in any unauthorized absence, disciplinary misconduct, or activities that tarnish the reputation of the University or the host organization.
-          </span>
-        </li>
-        <li className="doc-point-item">
-          <span className="doc-point-num">V.</span>
-          <span>
-            I will honor Non-Disclosure Agreements (NDA) and intellectual property rights of the company while adhering to fair evaluation practices required by the department.
-          </span>
-        </li>
-        <li className="doc-point-item">
-          <span className="doc-point-num">VI.</span>
-          <span>
-            In the event of any discontinuation, change in work domain, or premature termination of the internship, I shall notify the Head of Department within 48 hours.
-          </span>
-        </li>
-        <li className="doc-point-item">
-          <span className="doc-point-num">VII.</span>
-          <span>
-            I acknowledge that any malpractice, falsification of documents, or unauthorized absconding will attract severe academic disciplinary action and cancellation of internship credits.
-          </span>
-        </li>
-        <li className="doc-point-item">
-          <span className="doc-point-num">VIII.</span>
-          <span>
-            The University will not be held liable for any personal injury, financial dispute, travel risk, or intellectual property disputes arising during the industrial engagement.
-          </span>
-        </li>
-        <li className="doc-point-item">
-          <span className="doc-point-num">IX.</span>
-          <span>
-            I confirm that I have verified all details provided herein and will submit the final Internship Completion Certificate & Evaluation Sheet issued by <strong>{companyName}</strong> upon completion.
-          </span>
-        </li>
-      </ul>
-
-      {/* Signature & Candidate Details Section */}
-      <div style={{
-        marginTop: '18px',
-        display: 'grid',
-        gridTemplateColumns: '1.2fr 1fr 1fr',
-        gap: '16px',
-        fontFamily: 'var(--font-doc-sans)',
-        fontSize: '8.5pt'
-      }}>
-        {/* Student Signature Box */}
+        {/* Date Row (Aligned Right) */}
         <div style={{
-          border: '1px solid #e2e8f0',
-          borderRadius: '6px',
-          padding: '8px 10px',
-          backgroundColor: '#fafbfc'
-        }}>
-          <div style={{ fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>Candidate Details & Sign:</div>
-          <div style={{ height: '32px' }}></div>
-          <div style={{ borderTop: '1px dashed #475569', paddingTop: '4px' }}>
-            <div><strong>Signature:</strong> _______________________</div>
-            <div><strong>Name:</strong> <span className="doc-dynamic-text">{studentName}</span></div>
-            <div><strong>Roll No:</strong> {rollNumber}</div>
-            <div><strong>Contact:</strong> {contactNumber}</div>
-            <div><strong>Email:</strong> {email}</div>
-          </div>
-        </div>
-
-        {/* Mentor Signature Box */}
-        <div style={{
-          border: '1px solid #e2e8f0',
-          borderRadius: '6px',
-          padding: '8px 10px',
-          backgroundColor: '#fafbfc',
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between'
+          justifyContent: 'flex-end',
+          fontSize: '10pt',
+          fontFamily: 'var(--font-doc-serif)',
+          fontWeight: '700',
+          marginBottom: '10px'
         }}>
           <div>
-            <div style={{ fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>Academic Mentor:</div>
-            <div><strong>Name:</strong> {mentorName}</div>
-            <div style={{ color: '#64748b', fontSize: '8pt' }}>School of Computing</div>
-          </div>
-          <div style={{ borderTop: '1px dashed #475569', paddingTop: '4px', textAlign: 'center' }}>
-            <div style={{ height: '24px' }}></div>
-            <div><strong>Signature & Date</strong></div>
+            Date: <span className="doc-dynamic-text" style={{ fontStyle: 'italic' }}>{displayDate}</span>
           </div>
         </div>
 
-        {/* HOD Endorsement Box */}
+        {/* Centered Document Title */}
+        <div style={{ textAlign: 'center', margin: '8px 0 16px 0' }}>
+          <span style={{
+            fontSize: '12pt',
+            fontWeight: '800',
+            textDecoration: 'underline',
+            textUnderlineOffset: '3px',
+            fontFamily: 'var(--font-doc-serif)'
+          }}>
+            Undertaking
+          </span>
+        </div>
+
+        {/* Salutation */}
         <div style={{
-          border: '1px solid #e2e8f0',
-          borderRadius: '6px',
-          padding: '8px 10px',
-          backgroundColor: '#fafbfc',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between'
+          fontSize: '10pt',
+          fontFamily: 'var(--font-doc-serif)',
+          marginBottom: '12px'
         }}>
-          <div>
-            <div style={{ fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>Department Approval:</div>
-            <div style={{ color: '#64748b', fontSize: '8pt' }}>Head of Department</div>
-            <div style={{ color: '#64748b', fontSize: '8pt' }}>Training & Placement Cell</div>
+          Dear Sir / Madam,
+        </div>
+
+        {/* Student Identification Paragraph with Exact Underlines */}
+        <div style={{
+          fontSize: '10pt',
+          lineHeight: '1.85',
+          fontFamily: 'var(--font-doc-serif)',
+          textAlign: 'justify',
+          marginBottom: '14px'
+        }}>
+          I, <span className="doc-dynamic-text">{studentName}</span>, 
+          Class <span className="doc-dynamic-text">{className}</span>, 
+          Roll. No. <span className="doc-dynamic-text">{rollNumber}</span>, 
+          Enrolment no. <span className="doc-dynamic-text">{enrollmentNumber}</span>, 
+          student of MIT ADT University, School of Computing, <span className="doc-dynamic-text">{department}</span> Department.
+          <br />
+          I am selected in <span className="doc-dynamic-text">{companyName}</span>
+          <br />
+          Duration of this program is <span className="doc-dynamic-text">{duration}</span>
+          <br />
+          I wish to pursue an internship at <span className="doc-dynamic-text">{companyName}</span>, 
+          from <span className="doc-dynamic-text">{displayStart}</span> to <span className="doc-dynamic-text">{displayEnd}</span>
+        </div>
+
+        {/* Preamble Statement */}
+        <div style={{
+          fontSize: '9.75pt',
+          lineHeight: '1.4',
+          fontFamily: 'var(--font-doc-serif)',
+          marginBottom: '10px'
+        }}>
+          I hereby undertake to fully abide by all the Policies / Norms / Instructions of the Institute given from time to time, including the following:
+        </div>
+
+        {/* Exact Points I to IX */}
+        <div style={{
+          fontSize: '9.2pt',
+          lineHeight: '1.45',
+          fontFamily: 'var(--font-doc-serif)',
+          textAlign: 'justify'
+        }}>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '5px' }}>
+            <span style={{ minWidth: '22px', fontWeight: '700' }}>I.</span>
+            <span>I will remain responsible for attendance in lectures and practical.</span>
           </div>
-          <div style={{ borderTop: '1px dashed #475569', paddingTop: '4px', textAlign: 'center' }}>
-            <div style={{ height: '24px' }}></div>
-            <div><strong>Seal & Signature (HOD)</strong></div>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '5px' }}>
+            <span style={{ minWidth: '22px', fontWeight: '700' }}>II.</span>
+            <span>I will complete all the necessary assignments and lab experiments.</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '5px' }}>
+            <span style={{ minWidth: '22px', fontWeight: '700' }}>III.</span>
+            <span>I will be available for university examination including Term Assessments, Practical Assessments and Project presentations in the VII and VIII semesters.</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '5px' }}>
+            <span style={{ minWidth: '22px', fontWeight: '700' }}>IV.</span>
+            <span>I will keep updating progress of internship to my designated academic mentor as and when asked by him.</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '5px' }}>
+            <span style={{ minWidth: '22px', fontWeight: '700' }}>V.</span>
+            <span>I will be responsible for cancellation of my internship at any stage if found fake or irrelevant.</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '5px' }}>
+            <span style={{ minWidth: '22px', fontWeight: '700' }}>VI.</span>
+            <span>I understand that maintaining a minimum of 75% attendance, as per university norms, is my responsibility.</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '5px' }}>
+            <span style={{ minWidth: '22px', fontWeight: '700' }}>VII.</span>
+            <span>I will ensure that my internship commitments do not affect my academic schedule and will be carried out beyond regular college hours.</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '5px' }}>
+            <span style={{ minWidth: '22px', fontWeight: '700' }}>VIII.</span>
+            <span>If the Summer Internship dates clash with Campus to Corporate Training (Summer Training), I will coordinate with CRTP by keeping DTPO in loop.</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+            <span style={{ minWidth: '22px', fontWeight: '700' }}>IX.</span>
+            <span>After completion of the internship, I will submit the <strong>Internship Completion Letter</strong> to the Internship Incharge; otherwise, I am fully aware that my internship will not be approved.</span>
+          </div>
+        </div>
+
+        {/* Candidate Signature Block (Aligned Bottom Right) */}
+        <div style={{
+          marginTop: '22px',
+          display: 'flex',
+          justifyContent: 'flex-end'
+        }}>
+          <div style={{
+            minWidth: '260px',
+            fontSize: '9.5pt',
+            fontFamily: 'var(--font-doc-serif)',
+            lineHeight: '1.7'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontWeight: '700' }}>Candidate's Signature:</span>
+              <span style={{
+                fontFamily: 'cursive',
+                fontSize: '13pt',
+                color: '#1d4ed8',
+                fontStyle: 'italic',
+                textDecoration: 'underline'
+              }}>
+                {studentName ? studentName.split(' ')[0] : 'Sign'}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <span style={{ fontWeight: '700' }}>Candidate's Name:</span>
+              <span className="doc-dynamic-text">{studentName}</span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <span style={{ fontWeight: '700' }}>Contact No.:</span>
+              <span className="doc-dynamic-text">{contactNumber}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* University Institutional Footer */}
-      <DocumentFooter 
-        docCode="MIT-ADT/SOC/UT-2026/01"
-      />
+      {/* Institutional Footer */}
+      <DocumentFooter />
     </div>
   );
 };

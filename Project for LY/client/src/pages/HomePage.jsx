@@ -2,387 +2,238 @@ import React from 'react';
 import { 
   FileCheck2, 
   Award, 
-  ArrowRight, 
-  Printer, 
-  FileText, 
-  ShieldCheck, 
-  CheckCircle2, 
-  Zap, 
+  Layers, 
   Clock, 
-  Layers,
-  Sparkles
+  CheckCircle2, 
+  ArrowRight, 
+  Sparkles,
+  FileText,
+  ShieldCheck,
+  Building
 } from 'lucide-react';
-import { DOCUMENTS } from '../data/documentsConfig';
 
-export const HomePage = ({ onNavigate, onSelectDocument }) => {
+export const HomePage = ({ onNavigate, onSelectDocument, userRole = "Student" }) => {
   return (
     <div className="animate-fade-in">
-      {/* Hero Section */}
-      <section className="hero-gradient" style={{
-        paddingTop: '4.5rem',
-        paddingBottom: '4.5rem',
-        borderBottom: '1px solid var(--slate-200)',
-        textAlign: 'center'
+      {/* Portal Hero Banner (Matching Image 3) */}
+      <div className="portal-hero-banner">
+        <div>
+          <span className="portal-hero-tag">
+            {userRole === "Dean" ? "HOD & DEAN APPROVAL DESK" : "STUDENT INTERNSHIP DOCUMENTATION DESK"}
+          </span>
+          <h1 className="portal-hero-title">
+            {userRole === "Dean" ? "Dr. Rajesh Kumar" : "Internship Document Portal"}
+          </h1>
+          <p className="portal-hero-subtitle">
+            MIT-ADT University • School of Computing (SOC) • Rajbaug Campus, Pune
+          </p>
+        </div>
+
+        {/* Right Stat Pills (from Image 3) */}
+        <div className="portal-stat-pill-group">
+          <div className="portal-stat-pill">
+            <div className="portal-stat-pill-label">Active Templates</div>
+            <div className="portal-stat-pill-value">2</div>
+          </div>
+          <div className="portal-stat-pill">
+            <div className="portal-stat-pill-label">Institutional Status</div>
+            <div className="portal-stat-pill-value" style={{ color: '#86efac', fontSize: '1.15rem', marginTop: '4px' }}>
+              VERIFIED
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3 Main Action Cards (Matching Image 3 Layout) */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '1.5rem',
+        marginBottom: '2.5rem'
       }}>
-        <div className="container container-narrow">
-          {/* Institutional Badge */}
-          <div style={{ display: 'inline-flex', marginBottom: '1.25rem' }}>
-            <span className="badge badge-primary" style={{ padding: '0.35rem 0.95rem', gap: '0.5rem' }}>
-              <Sparkles size={14} />
-              University Internship Document Generator
+        {/* Card 1: Internship Undertaking */}
+        <div className="card" style={{ padding: '1.75rem', position: 'relative' }}>
+          {/* Top Pill Badge */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              backgroundColor: 'var(--purple-50)',
+              color: 'var(--purple-600)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <FileCheck2 size={22} />
+            </div>
+
+            <span style={{
+              backgroundColor: 'var(--amber-100)',
+              color: 'var(--amber-800)',
+              fontSize: '0.725rem',
+              fontWeight: 700,
+              padding: '0.2rem 0.65rem',
+              borderRadius: 'var(--radius-full)'
+            }}>
+              Form 01 • Active
             </span>
           </div>
 
-          {/* Main Title */}
-          <h1 style={{
-            fontSize: 'clamp(2.2rem, 5vw, 3.4rem)',
-            fontWeight: 800,
-            color: 'var(--navy-900)',
-            lineHeight: 1.15,
-            letterSpacing: '-0.03em',
-            marginBottom: '1.25rem'
-          }}>
-            Generate Your Internship Documents <br />
-            <span style={{
-              background: 'linear-gradient(135deg, #1e40af, #2563eb, #3b82f6)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              in Minutes
-            </span>
-          </h1>
-
-          {/* Description */}
-          <p style={{
-            fontSize: 'clamp(1rem, 2vw, 1.2rem)',
-            color: 'var(--slate-600)',
-            maxWidth: '680px',
-            margin: '0 auto 2.25rem auto',
-            lineHeight: 1.6
-          }}>
-            Fill in your details once and generate properly formatted internship documents ready for printing.
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--purple-950)', marginBottom: '0.4rem' }}>
+            Internship Undertaking
+          </h3>
+          <p style={{ color: 'var(--slate-600)', fontSize: '0.865rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+            Generate student compliance declaration with academic norms, Points I to IX, and candidate signature.
           </p>
 
-          {/* Action CTAs */}
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '1rem',
-            marginBottom: '3rem'
-          }}>
-            <button
-              onClick={() => onNavigate('documents')}
-              className="btn btn-primary btn-lg"
-              style={{ minWidth: '200px' }}
-            >
-              Generate Document
-              <ArrowRight size={18} />
-            </button>
-
-            <button
-              onClick={() => onNavigate('documents')}
-              className="btn btn-secondary btn-lg"
-              style={{ minWidth: '180px' }}
-            >
-              <Layers size={18} />
-              View Documents
-            </button>
-          </div>
-
-          {/* Quick Metrics */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '1.5rem',
-            paddingTop: '2rem',
-            borderTop: '1px solid var(--slate-200)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'center' }}>
-              <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'var(--primary-50)', color: 'var(--primary-600)' }}>
-                <Zap size={20} />
-              </div>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy-900)' }}>Instant A4 Preview</div>
-                <div style={{ fontSize: '0.775rem', color: 'var(--slate-500)' }}>Exact print formatting</div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'center' }}>
-              <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'var(--success-50)', color: 'var(--success-600)' }}>
-                <Printer size={20} />
-              </div>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy-900)' }}>1-Click Print & PDF</div>
-                <div style={{ fontSize: '0.775rem', color: 'var(--slate-500)' }}>High-res document export</div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'center' }}>
-              <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'var(--primary-50)', color: 'var(--primary-600)' }}>
-                <ShieldCheck size={20} />
-              </div>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy-900)' }}>100% Privacy Friendly</div>
-                <div style={{ fontSize: '0.775rem', color: 'var(--slate-500)' }}>No database required</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Document Cards Section */}
-      <section style={{ padding: '4.5rem 0', backgroundColor: 'var(--slate-100)' }}>
-        <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <span className="badge badge-primary" style={{ marginBottom: '0.5rem' }}>Select Document</span>
-            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--navy-900)' }}>
-              Choose Document to Generate
-            </h2>
-            <p style={{ color: 'var(--slate-600)', fontSize: '0.95rem', marginTop: '0.25rem' }}>
-              Select from official university-approved internship formats.
-            </p>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '2rem',
-            maxWidth: '1000px',
-            margin: '0 auto'
-          }}>
-            {/* Document Card 1: Undertaking */}
-            <div className="card" style={{
-              padding: '2rem',
+          <button
+            onClick={() => onSelectDocument('undertaking')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--purple-600)',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
               display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '4px',
-                background: 'linear-gradient(90deg, #2563eb, #3b82f6)'
-              }}></div>
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: 0
+            }}
+          >
+            Open Undertaking Form
+            <ArrowRight size={16} />
+          </button>
+        </div>
 
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
-                  <div style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '12px',
-                    backgroundColor: 'var(--primary-50)',
-                    color: 'var(--primary-600)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <FileCheck2 size={26} />
-                  </div>
-                  <span className="badge badge-primary">DOC-01</span>
-                </div>
-
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--navy-900)', marginBottom: '0.5rem' }}>
-                  Internship Undertaking
-                </h3>
-                <p style={{ color: 'var(--slate-600)', fontSize: '0.925rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-                  Generate the internship undertaking form by entering your academic and internship details.
-                </p>
-
-                <div style={{
-                  backgroundColor: 'var(--slate-50)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '0.85rem 1rem',
-                  fontSize: '0.8rem',
-                  color: 'var(--slate-600)',
-                  marginBottom: '1.5rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.4rem'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={14} color="var(--success-600)" />
-                    <span>Clauses I to IX Institutional Declaration</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={14} color="var(--success-600)" />
-                    <span>Candidate, Mentor & HOD Signatory Layout</span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => onSelectDocument('undertaking')}
-                className="btn btn-primary"
-                style={{ width: '100%', justifyContent: 'center' }}
-              >
-                Generate Undertaking
-                <ArrowRight size={16} />
-              </button>
-            </div>
-
-            {/* Document Card 2: NOC */}
-            <div className="card" style={{
-              padding: '2rem',
+        {/* Card 2: Internship NOC */}
+        <div className="card" style={{ padding: '1.75rem', position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              backgroundColor: '#eff6ff',
+              color: '#2563eb',
               display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              position: 'relative',
-              overflow: 'hidden'
+              alignItems: 'center',
+              justifyContent: 'center'
             }}>
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '4px',
-                background: 'linear-gradient(90deg, #1e3e62, #0b192c)'
-              }}></div>
-
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
-                  <div style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '12px',
-                    backgroundColor: 'var(--slate-100)',
-                    color: 'var(--navy-900)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <Award size={26} />
-                  </div>
-                  <span className="badge badge-neutral">DOC-02</span>
-                </div>
-
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--navy-900)', marginBottom: '0.5rem' }}>
-                  Internship NOC
-                </h3>
-                <p style={{ color: 'var(--slate-600)', fontSize: '0.925rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-                  Generate a university No Objection Certificate for your internship.
-                </p>
-
-                <div style={{
-                  backgroundColor: 'var(--slate-50)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '0.85rem 1rem',
-                  fontSize: '0.8rem',
-                  color: 'var(--slate-600)',
-                  marginBottom: '1.5rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.4rem'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={14} color="var(--success-600)" />
-                    <span>Institutional Letterhead & Ref Number</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={14} color="var(--success-600)" />
-                    <span>3 Signatories + University Seal Placeholder</span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => onSelectDocument('noc')}
-                className="btn btn-dark"
-                style={{ width: '100%', justifyContent: 'center' }}
-              >
-                Generate NOC
-                <ArrowRight size={16} />
-              </button>
+              <Award size={22} />
             </div>
+
+            <span style={{
+              backgroundColor: 'var(--purple-100)',
+              color: 'var(--purple-700)',
+              fontSize: '0.725rem',
+              fontWeight: 700,
+              padding: '0.2rem 0.65rem',
+              borderRadius: 'var(--radius-full)'
+            }}>
+              Form 02 • Official Stamp
+            </span>
           </div>
+
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--purple-950)', marginBottom: '0.4rem' }}>
+            No Objection Certificate (NOC)
+          </h3>
+          <p style={{ color: 'var(--slate-600)', fontSize: '0.865rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+            Generate official NOC letter addressed to company HR with 3 institutional signatories and Central T&P stamp.
+          </p>
+
+          <button
+            onClick={() => onSelectDocument('noc')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--purple-600)',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: 0
+            }}
+          >
+            Open NOC Form
+            <ArrowRight size={16} />
+          </button>
         </div>
-      </section>
 
-      {/* 3-Step Section */}
-      <section style={{ padding: '4.5rem 0', backgroundColor: 'white' }}>
-        <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-            <span className="badge badge-primary" style={{ marginBottom: '0.5rem' }}>How It Works</span>
-            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--navy-900)' }}>
-              3 Simple Steps to Your Document
-            </h2>
-            <p style={{ color: 'var(--slate-600)', fontSize: '0.95rem', marginTop: '0.25rem' }}>
-              From blank form to verified print-ready A4 document in under 3 minutes.
-            </p>
+        {/* Card 3: Document Repository */}
+        <div className="card" style={{ padding: '1.75rem', position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              backgroundColor: '#ecfdf5',
+              color: '#059669',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Layers size={22} />
+            </div>
+
+            <span style={{
+              backgroundColor: '#ecfdf5',
+              color: '#047857',
+              fontSize: '0.725rem',
+              fontWeight: 700,
+              padding: '0.2rem 0.65rem',
+              borderRadius: 'var(--radius-full)'
+            }}>
+              Catalog
+            </span>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: '2rem'
-          }}>
-            {/* Step 1 */}
-            <div className="card" style={{ padding: '2rem', textAlign: 'center', position: 'relative' }}>
-              <div style={{
-                fontSize: '2.5rem',
-                fontWeight: 900,
-                color: 'var(--primary-200)',
-                lineHeight: 1,
-                marginBottom: '1rem',
-                fontFamily: 'var(--font-sans)'
-              }}>
-                01
-              </div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--navy-900)', marginBottom: '0.5rem' }}>
-                Select Document
-              </h3>
-              <p style={{ color: 'var(--slate-600)', fontSize: '0.9rem', lineHeight: 1.6 }}>
-                Choose between Internship Undertaking or No Objection Certificate (NOC) based on your university requirement.
-              </p>
-            </div>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--purple-950)', marginBottom: '0.4rem' }}>
+            Template Repository
+          </h3>
+          <p style={{ color: 'var(--slate-600)', fontSize: '0.865rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+            Browse complete catalog of university internship templates including Bonafide, LOR, and Completion letters.
+          </p>
 
-            {/* Step 2 */}
-            <div className="card" style={{ padding: '2rem', textAlign: 'center', position: 'relative' }}>
-              <div style={{
-                fontSize: '2.5rem',
-                fontWeight: 900,
-                color: 'var(--primary-300)',
-                lineHeight: 1,
-                marginBottom: '1rem',
-                fontFamily: 'var(--font-sans)'
-              }}>
-                02
-              </div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--navy-900)', marginBottom: '0.5rem' }}>
-                Enter Details
-              </h3>
-              <p style={{ color: 'var(--slate-600)', fontSize: '0.9rem', lineHeight: 1.6 }}>
-                Fill in student credentials, internship role, company information, and duration. Or use "Load Sample Data" for quick testing.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="card" style={{ padding: '2rem', textAlign: 'center', position: 'relative' }}>
-              <div style={{
-                fontSize: '2.5rem',
-                fontWeight: 900,
-                color: 'var(--primary-400)',
-                lineHeight: 1,
-                marginBottom: '1rem',
-                fontFamily: 'var(--font-sans)'
-              }}>
-                03
-              </div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--navy-900)', marginBottom: '0.5rem' }}>
-                Preview & Print
-              </h3>
-              <p style={{ color: 'var(--slate-600)', fontSize: '0.9rem', lineHeight: 1.6 }}>
-                Inspect the live A4 preview with exact institutional margins, then download crisp PDF or print directly from your browser.
-              </p>
-            </div>
-          </div>
+          <button
+            onClick={() => onNavigate('documents')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--purple-600)',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: 0
+            }}
+          >
+            Browse All Templates
+            <ArrowRight size={16} />
+          </button>
         </div>
-      </section>
+      </div>
+
+      {/* Institutional Guidelines Notice Card */}
+      <div className="card" style={{
+        padding: '1.5rem 1.75rem',
+        backgroundColor: '#ffffff',
+        borderLeft: '5px solid var(--purple-600)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+          <ShieldCheck size={20} color="var(--purple-600)" />
+          <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--purple-950)' }}>
+            MIT-ADT School of Computing Documentation Guidelines
+          </h4>
+        </div>
+        <p style={{ fontSize: '0.85rem', color: 'var(--slate-600)', lineHeight: 1.6 }}>
+          All students undertaking corporate internships must submit both the <strong>Internship Undertaking</strong> (signed by candidate) and <strong>No Objection Certificate</strong> (endorsed by Internship Head, HOD, and Placement Cell) to the department records.
+        </p>
+      </div>
     </div>
   );
 };

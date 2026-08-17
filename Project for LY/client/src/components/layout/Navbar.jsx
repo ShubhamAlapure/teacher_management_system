@@ -1,137 +1,151 @@
 import React from 'react';
-import { FileText, Sparkles, Printer, Layers, Compass, HelpCircle } from 'lucide-react';
+import { Bell, ChevronDown, Sparkles } from 'lucide-react';
 
-export const Navbar = ({ currentRoute, onNavigate }) => {
+export const Navbar = ({ currentRoute, onNavigate, userRole = "Student" }) => {
   return (
-    <nav className="glass-nav app-navbar" style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 50,
-      height: 'var(--header-height)',
-      display: 'flex',
-      alignItems: 'center'
-    }}>
-      <div className="container" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        {/* Brand Logo */}
-        <div 
-          onClick={() => onNavigate('home')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            cursor: 'pointer',
-            userSelect: 'none'
-          }}
-        >
+    <header className="portal-topbar non-printable">
+      {/* Left side: MIT-ADT University Logo Header */}
+      <div 
+        onClick={() => onNavigate('home')}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          cursor: 'pointer',
+          userSelect: 'none'
+        }}
+      >
+        {/* White Emblem */}
+        <div style={{
+          width: '38px',
+          height: '38px',
+          borderRadius: '50%',
+          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+          border: '1.5px solid rgba(255, 255, 255, 0.4)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontWeight: 800,
+          fontSize: '9px',
+          lineHeight: 1
+        }}>
+          <span>MIT</span>
+          <span style={{ fontSize: '10px', color: '#c4b5fd' }}>★</span>
+        </div>
+
+        <div>
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #1e3a8a, #2563eb)',
+            fontSize: '1.05rem',
+            fontWeight: '900',
+            letterSpacing: '0.04em',
+            color: 'white',
+            lineHeight: 1.15
+          }}>
+            MIT-ADT
+          </div>
+          <div style={{
+            fontSize: '0.7rem',
+            fontWeight: '700',
+            color: '#c4b5fd',
+            letterSpacing: '0.06em'
+          }}>
+            UNIVERSITY
+          </div>
+          <div style={{
+            fontSize: '0.58rem',
+            color: 'rgba(255, 255, 255, 0.65)',
+            fontStyle: 'italic',
+            letterSpacing: '0.02em',
+            lineHeight: 1
+          }}>
+            PUNE, INDIA • A Leap Towards World Class Education
+          </div>
+        </div>
+      </div>
+
+      {/* Right side: Notifications & User Persona Header (Matching Image 3) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        {/* Notification Bell */}
+        <button
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            border: 'none',
+            color: 'white',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'white',
-            boxShadow: '0 4px 10px rgba(37, 99, 235, 0.3)'
-          }}>
-            <FileText size={22} strokeWidth={2.2} />
-          </div>
-          <div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem'
-            }}>
-              <span style={{
-                fontSize: '1.25rem',
-                fontWeight: '800',
-                color: 'var(--navy-900)',
-                letterSpacing: '-0.02em'
-              }}>
-                Intern<span style={{ color: 'var(--primary-600)' }}>Docs</span>
-              </span>
-              <span className="badge badge-primary" style={{ fontSize: '0.65rem', padding: '0.15rem 0.5rem' }}>
-                v1.0
-              </span>
-            </div>
-            <p style={{
-              fontSize: '0.75rem',
-              color: 'var(--slate-500)',
-              fontWeight: '500',
-              lineHeight: 1
-            }}>
-              Generate. Preview. Print.
-            </p>
-          </div>
-        </div>
+            cursor: 'pointer',
+            position: 'relative'
+          }}
+          title="Notifications"
+        >
+          <Bell size={17} />
+          <span style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            width: '7px',
+            height: '7px',
+            backgroundColor: '#a855f7',
+            borderRadius: '50%',
+            border: '1.5px solid #240d4f'
+          }} />
+        </button>
 
-        {/* Navigation Links */}
+        {/* User Persona Pill (from Image 3) */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem'
+          gap: '0.75rem',
+          padding: '0.35rem 0.6rem 0.35rem 0.85rem',
+          borderRadius: 'var(--radius-full)',
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          cursor: 'pointer'
         }}>
-          <button
-            onClick={() => onNavigate('home')}
-            className={`btn btn-sm ${currentRoute === 'home' ? 'btn-secondary' : ''}`}
-            style={{
-              background: currentRoute === 'home' ? 'var(--slate-100)' : 'transparent',
-              color: currentRoute === 'home' ? 'var(--primary-700)' : 'var(--slate-600)',
-              border: 'none'
-            }}
-          >
-            Home
-          </button>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{
+              fontSize: '0.785rem',
+              fontWeight: 800,
+              color: 'white',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase'
+            }}>
+              {userRole === "Dean" ? "DR. RAJESH KUMAR" : "SHRAWAN MOKALE"}
+            </div>
+            <div style={{
+              fontSize: '0.675rem',
+              color: '#c4b5fd',
+              fontWeight: 500
+            }}>
+              {userRole === "Dean" ? "MIT-DEAN-2012-0056 • School Dean" : "ADT23SOCA1062 • AIA-3 Final Year"}
+            </div>
+          </div>
 
-          <button
-            onClick={() => onNavigate('documents')}
-            className={`btn btn-sm ${currentRoute === 'documents' ? 'btn-secondary' : ''}`}
-            style={{
-              background: currentRoute === 'documents' ? 'var(--slate-100)' : 'transparent',
-              color: currentRoute === 'documents' ? 'var(--primary-700)' : 'var(--slate-600)',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem'
-            }}
-          >
-            <Layers size={16} />
-            Documents
-          </button>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 800,
+            fontSize: '0.8rem',
+            color: 'white',
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)'
+          }}>
+            {userRole === "Dean" ? "DR" : "SM"}
+          </div>
 
-          <button
-            onClick={() => onNavigate('about')}
-            className={`btn btn-sm ${currentRoute === 'about' ? 'btn-secondary' : ''}`}
-            style={{
-              background: currentRoute === 'about' ? 'var(--slate-100)' : 'transparent',
-              color: currentRoute === 'about' ? 'var(--primary-700)' : 'var(--slate-600)',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem'
-            }}
-          >
-            <HelpCircle size={16} />
-            About
-          </button>
-        </div>
-
-        {/* Primary CTA */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button
-            onClick={() => onNavigate('documents')}
-            className="btn btn-primary btn-sm"
-            style={{ boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)' }}
-          >
-            <Sparkles size={15} />
-            Generate Document
-          </button>
+          <ChevronDown size={14} color="#c4b5fd" />
         </div>
       </div>
-    </nav>
+    </header>
   );
 };
