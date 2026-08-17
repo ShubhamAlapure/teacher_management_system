@@ -182,7 +182,7 @@ CREATE POLICY "Allow public all leaves" ON leave_requests FOR ALL USING (true);
 CREATE POLICY "Allow public all apar" ON apar_evaluations FOR ALL USING (true);
 CREATE POLICY "Allow public all docs" ON teacher_documents FOR ALL USING (true);
 
--- 9. INITIAL SYSTEM SEED DATA (MASTER ADMIN & DEAN)
+-- 9. INITIAL SYSTEM SEED DATA (MASTER ADMIN & DEAN),HOD,HOI(Higher Authority)
 INSERT INTO teachers (
   emp_id, full_name, email, joining_date, cadre, subject, 
   current_school, district, block, gpf_nps_no, service_status, password
