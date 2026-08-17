@@ -17,7 +17,7 @@ export const DocumentHeader = ({
       {/* Left side: University Title & School of Computing with badge */}
       <div style={{ textAlign: 'left' }}>
         <div style={{
-          fontSize: '11.5pt',
+          fontSize: '11pt',
           fontWeight: '800',
           color: '#111',
           letterSpacing: '-0.01em',
@@ -67,14 +67,14 @@ export const DocumentHeader = ({
         </div>
       </div>
 
-      {/* Right side: MIT-ADT University Crest */}
+      {/* Right side: MIT-ADT University Crest & Title matching Image 1 & 2 */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
         textAlign: 'left'
       }}>
-        {/* Seal Icon */}
+        {/* Crest */}
         <div style={{
           width: '38px',
           height: '38px',
@@ -84,7 +84,8 @@ export const DocumentHeader = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '2px'
+          padding: '2px',
+          backgroundColor: '#ffffff'
         }}>
           <div style={{ fontSize: '5pt', fontWeight: '800', color: '#2a1668', textAlign: 'center', lineHeight: 1 }}>MIT</div>
           <div style={{ fontSize: '7pt', fontWeight: '900', color: '#7c3aed' }}>★</div>
