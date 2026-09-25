@@ -210,13 +210,13 @@ export const LandingPage = ({ onOpenAuth }) => {
                 </span>
                 <h3 className="text-xl font-extrabold">MIT-ADT System Administrator</h3>
                 <p className="text-xs text-purple-200">University Vice-Chancellor Office & Registrar Secretariat</p>
-                <p className="text-[11px] text-purple-300 font-mono">Master ID: MIT-MASTER-ADMIN-01</p>
+                <p className="text-[11px] text-purple-300 font-mono">Official Email: admin@mituniversity.edu.in</p>
               </div>
             </div>
 
             <button
               onClick={() => {
-                login('admin', 'MIT-MASTER-ADMIN-01');
+                login('admin', 'admin@mituniversity.edu.in', 'admin@123');
               }}
               className="px-6 py-3 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-purple-950 font-extrabold text-xs uppercase tracking-wider shadow-lg transition-all shrink-0 flex items-center gap-2"
             >

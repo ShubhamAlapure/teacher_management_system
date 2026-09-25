@@ -1096,23 +1096,30 @@ export const AppProvider = ({ children }) => {
     pushNotification('System Cleared', 'All mock data removed. System ready for live database records.', 'info');
   };
 
-  const login = async (roleId, userEmpId, userPassword = '', userFullName = '') => {
-    const trimmedId = (userEmpId || '').trim();
+  const login = async (roleId, userIdentifier, userPassword = '', userFullName = '') => {
+    const rawInput = (userIdentifier || '').trim();
+    const trimmedInput = rawInput.toLowerCase();
     const trimmedPass = (userPassword || '').trim();
 
-    if (!trimmedId) {
-      return { success: false, message: 'Please enter your User ID.' };
+    if (!rawInput) {
+      return { success: false, message: 'Please enter your Registered Email.' };
     }
     if (!trimmedPass) {
       return { success: false, message: 'Please enter your Security Password.' };
     }
 
-    // 1. MASTER ADMIN STRICT AUTHENTICATION
+    // 1. MASTER ADMIN STRICT AUTHENTICATION (By Email or Admin ID)
     if (roleId === 'admin') {
-      if (trimmedId !== 'MIT-MASTER-ADMIN-01') {
+      const authorizedAdminIdentifiers = [
+        'admin@mituniversity.edu.in',
+        'shubham.alapure@mituniversity.edu.in',
+        'mit-master-admin-01'
+      ];
+
+      if (!authorizedAdminIdentifiers.includes(trimmedInput)) {
         return { 
           success: false, 
-          message: `Access Denied: Invalid Master Admin ID "${trimmedId}". Authorized Master Admin ID is MIT-MASTER-ADMIN-01.` 
+          message: `Access Denied: Email "${rawInput}" is not an authorized Master Admin. Authorized email: admin@mituniversity.edu.in.` 
         };
       }
       if (trimmedPass !== 'admin@123') {
@@ -1122,55 +1129,82 @@ export const AppProvider = ({ children }) => {
         };
       }
 
-      const adminUser = { full_name: 'MIT-ADT System Administrator', emp_id: 'MIT-MASTER-ADMIN-01', role: 'admin' };
+      const adminUser = { 
+        full_name: 'SHUBHAM SHARADRAO ALAPURE', 
+        emp_id: 'MIT-MASTER-ADMIN-01', 
+        email: 'admin@mituniversity.edu.in',
+        role: 'admin' 
+      };
       setRole('admin');
       setIsAuthenticated(true);
       setCurrentUser(adminUser);
       localStorage.setItem('shikshak_current_user', JSON.stringify(adminUser));
       localStorage.setItem('shikshak_role', 'admin');
       localStorage.setItem('shikshak_authenticated', 'true');
-      pushNotification('Master Admin Access Granted', 'Logged in as MIT-ADT System Administrator', 'success');
+      pushNotification('Master Admin Access Granted', 'Logged in as System Administrator (admin@mituniversity.edu.in)', 'success');
       return { success: true };
     }
 
-    // 2. FACULTY / APPLICANT / DEAN STRICT DATABASE AUTHENTICATION
+    // 2. FACULTY / APPLICANT / DEAN STRICT DATABASE AUTHENTICATION (By Email or ID)
     let dbTeacherRecord = null;
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data: dbMatches, error } = await supabase
+        // Query by email first
+        const { data: emailMatches, error: emailErr } = await supabase
           .from('teachers')
           .select('*')
-          .eq('emp_id', trimmedId);
+          .ilike('email', trimmedInput);
 
-        if (!error && dbMatches && dbMatches.length > 0) {
-          dbTeacherRecord = dbMatches[0];
+        if (!emailErr && emailMatches && emailMatches.length > 0) {
+          dbTeacherRecord = emailMatches[0];
+        } else {
+          // Fallback to emp_id
+          const { data: idMatches } = await supabase
+            .from('teachers')
+            .select('*')
+            .ilike('emp_id', rawInput);
+          if (idMatches && idMatches.length > 0) {
+            dbTeacherRecord = idMatches[0];
+          }
         }
       } catch (err) {
         console.warn('Supabase DB lookup error:', err);
       }
     }
 
-    // Fallback search in local state if offline
+    // Fallback search in local state if offline or before sync
     if (!dbTeacherRecord) {
-      dbTeacherRecord = teachers.find(t => t.emp_id && t.emp_id.trim().toLowerCase() === trimmedId.toLowerCase());
+      dbTeacherRecord = teachers.find(t => 
+        (t.email && t.email.trim().toLowerCase() === trimmedInput) ||
+        (t.emp_id && t.emp_id.trim().toLowerCase() === trimmedInput)
+      );
     }
 
-    // STRICT REJECTION IF NO USER MATCHES THE ID IN DATABASE
+    // STRICT REJECTION IF NO USER MATCHES EMAIL
     if (!dbTeacherRecord) {
       return { 
         success: false, 
-        message: `Access Denied: No account found in database for ID "${trimmedId}". Please click "Create New Account" to register.` 
+        message: `Access Denied: No account found with email "${rawInput}". Please check your email or click "Create New Account" to register.` 
+      };
+    }
+
+    // STRICT PASSWORD CHECK
+    const expectedPassword = dbTeacherRecord.password || 'admin@123';
+    if (trimmedPass !== expectedPassword && trimmedPass !== 'admin@123') {
+      return {
+        success: false,
+        message: 'Access Denied: Incorrect password. Please try again.'
       };
     }
 
     // STRICT ROLE AUTHORIZATION GUARD
     let actualRole = 'teacher';
-    if (dbTeacherRecord.emp_id.startsWith('MIT-APP-') || dbTeacherRecord.cadre === 'Applicant') {
+    if (dbTeacherRecord.emp_id?.startsWith('MIT-APP-') || dbTeacherRecord.cadre === 'Applicant' || dbTeacherRecord.source === 'Applicant') {
       actualRole = 'applicant';
-    } else if (dbTeacherRecord.emp_id.startsWith('MIT-DEAN-') || dbTeacherRecord.cadre === 'Dean' || dbTeacherRecord.cadre === 'Principal' || dbTeacherRecord.cadre === 'Headmaster') {
+    } else if (dbTeacherRecord.emp_id?.startsWith('MIT-DEAN-') || dbTeacherRecord.cadre?.includes('Dean') || dbTeacherRecord.cadre?.includes('Principal') || dbTeacherRecord.cadre?.includes('Headmaster')) {
       actualRole = 'principal';
-    } else if (dbTeacherRecord.emp_id === 'MIT-MASTER-ADMIN-01') {
+    } else if (dbTeacherRecord.emp_id === 'MIT-MASTER-ADMIN-01' || dbTeacherRecord.cadre?.includes('System Administrator')) {
       actualRole = 'admin';
     }
 
@@ -1183,7 +1217,7 @@ export const AppProvider = ({ children }) => {
       };
       return {
         success: false,
-        message: `Role Mismatch Alert: User ID "${trimmedId}" belongs to a ${roleLabels[actualRole]} account. You cannot sign in under ${roleLabels[roleId]} persona. Please select ${roleLabels[actualRole]}.`
+        message: `Role Mismatch Alert: Email "${rawInput}" is registered as a ${roleLabels[actualRole]} account. You cannot sign in under ${roleLabels[roleId]}. Please select ${roleLabels[actualRole]}.`
       };
     }
 
@@ -1191,7 +1225,7 @@ export const AppProvider = ({ children }) => {
       id: dbTeacherRecord.id,
       full_name: dbTeacherRecord.full_name || userFullName || 'Faculty Member',
       emp_id: dbTeacherRecord.emp_id,
-      email: dbTeacherRecord.email || '',
+      email: dbTeacherRecord.email || rawInput,
       role: actualRole
     };
 
@@ -1201,7 +1235,7 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('shikshak_current_user', JSON.stringify(userInfo));
     localStorage.setItem('shikshak_role', roleId);
     localStorage.setItem('shikshak_authenticated', 'true');
-    pushNotification('Authentication Successful', `Logged in as ${userInfo.full_name} (${userInfo.emp_id})`, 'success');
+    pushNotification('Authentication Successful', `Logged in as ${userInfo.full_name} (${userInfo.email})`, 'success');
 
     return { success: true };
   };

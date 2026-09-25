@@ -25,7 +25,7 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
   const [authError, setAuthError] = useState('');
   
   // Sign In Form States
-  const [empId, setEmpId] = useState('');
+  const [emailInput, setEmailInput] = useState('');
   const [password, setPassword] = useState('');
 
   // Sign Up Form States
@@ -39,28 +39,28 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
       id: 'admin',
       title: 'Master Admin',
       icon: ShieldCheck,
-      demoId: 'MIT-MASTER-ADMIN-01',
+      demoEmail: 'admin@mituniversity.edu.in',
       desc: 'Master Admin & VC Office. Full administrative authority over all 8 modules & Supabase DB.'
     },
     {
       id: 'teacher',
       title: 'Faculty Member (Prof / Assoc Prof)',
       icon: GraduationCap,
-      demoId: 'MIT-FAC-2021-4091',
+      demoEmail: 'suresh.verma@mituniversity.edu.in',
       desc: 'View e-Service Book, file department transfer applications, leaves & download 7th Pay payslips.'
     },
     {
       id: 'principal',
       title: 'Head of Department (HOD) / Dean',
       icon: Building2,
-      demoId: 'MIT-DEAN-2012-0056',
+      demoEmail: 'dean.soe@mituniversity.edu.in',
       desc: 'Approve faculty leaves, recommend lab/dept transfers & grade APAR/API research reviews.'
     },
     {
       id: 'applicant',
       title: 'Faculty / Scholar Applicant',
       icon: User,
-      demoId: 'MIT-APP-2026-9901',
+      demoEmail: 'neha.applicant@gmail.com',
       desc: 'Apply for MIT-ADT University Assistant Professor, Associate Professor, & Research Fellowships.'
     }
   ];
@@ -78,23 +78,23 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
     }
   };
 
-  const handleFillDemoCredentials = () => {
-    const selectedObj = roles.find(r => r.id === selectedRole) || roles[1];
-    setEmpId(selectedObj.demoId || 'MIT-FAC-2021-4091');
+  const handleFillDemoCredentials = (roleId = selectedRole) => {
+    const selectedObj = roles.find(r => r.id === roleId) || roles[1];
+    setEmailInput(selectedObj.demoEmail || 'suresh.verma@mituniversity.edu.in');
     setPassword('admin@123');
-    pushNotification('Demo Credentials Filled', `Loaded ID ${selectedObj.demoId || 'MIT-FAC-2021-4091'}`, 'info');
+    pushNotification('Demo Credentials Filled', `Loaded Email ${selectedObj.demoEmail}`, 'info');
   };
 
   const handleSignInSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
 
-    if (!empId.trim()) {
-      setAuthError('Please enter your Faculty / Application / Admin ID.');
+    if (!emailInput.trim()) {
+      setAuthError('Please enter your Registered University / Personal Email.');
       return;
     }
 
-    const res = await login(selectedRole, empId, password);
+    const res = await login(selectedRole, emailInput, password);
     if (!res || !res.success) {
       setAuthError(res?.message || 'Access Denied: Invalid credentials.');
     }
@@ -214,7 +214,17 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
             {/* SIGN IN MODE: Persona Selector */}
             {authMode === 'signin' ? (
               <div>
-                <p className="text-xs font-extrabold text-purple-950 mb-2">Select Persona Scope:</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-extrabold text-purple-950">Select Persona Scope:</p>
+                  <button
+                    type="button"
+                    onClick={() => handleFillDemoCredentials(selectedRole)}
+                    className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-[11px] font-extrabold flex items-center gap-1 transition-all shadow-xs cursor-pointer"
+                  >
+                    <Sparkles className="w-3 h-3 text-amber-600" />
+                    <span>Fill Demo Credentials</span>
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-2.5">
                   {roles.map((r) => {
                     const IconComp = r.icon;
@@ -224,7 +234,11 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
                       <button
                         key={r.id}
                         type="button"
-                        onClick={() => handleRoleSelect(r.id)}
+                        onClick={() => {
+                          handleRoleSelect(r.id);
+                          setEmailInput(r.demoEmail);
+                          setPassword('admin@123');
+                        }}
                         className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between ${
                           isSelected
                             ? 'bg-purple-100/90 border-purple-600 ring-2 ring-purple-600/30 text-purple-950 font-bold shadow-sm'
@@ -240,6 +254,7 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
 
                         <div className="mt-1.5">
                           <p className="text-[11px] font-extrabold leading-snug">{r.title}</p>
+                          <p className="text-[10px] text-purple-700 font-mono mt-0.5 truncate">{r.demoEmail}</p>
                         </div>
                       </button>
                     );
@@ -271,16 +286,16 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
               <form onSubmit={handleSignInSubmit} className="space-y-4 pt-2 border-t border-purple-100">
                 <div>
                   <label className="text-xs font-bold text-slate-700">
-                    Faculty / Application / Admin ID
+                    Institutional / Registered Email Address
                   </label>
                   <div className="relative mt-1">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
                     <input
                       type="text"
                       required
-                      placeholder="Enter User ID (e.g. MIT-MASTER-ADMIN-01)"
-                      value={empId}
-                      onChange={(e) => setEmpId(e.target.value)}
+                      placeholder="Enter registered email (e.g. suresh.verma@mituniversity.edu.in)"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
                       className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-purple-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-purple-600 focus:outline-none"
                     />
                   </div>
