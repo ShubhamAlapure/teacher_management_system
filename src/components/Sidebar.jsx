@@ -11,20 +11,32 @@ import {
   BarChart3,
   Lock,
   LogOut,
-  Users
+  Users,
+  Camera
 } from 'lucide-react';
 
 export const Sidebar = () => {
-  const { activeTab, setActiveTab, role, transfers, leaves, documents, applications, teachers, logout } = useApp();
+  const { activeTab, setActiveTab, role, transfers, leaves, documents, applications, teachers, attendance, logout } = useApp();
 
   // Pending Counts for Badges
   const pendingTransfers = (transfers || []).filter(t => t?.status?.includes('Pending')).length;
   const pendingLeaves = (leaves || []).filter(l => l?.status === 'Pending').length;
   const pendingDocs = (documents || []).filter(d => d?.status === 'Pending').length;
   const appointedCount = (applications || []).filter(a => a?.status === 'Appointed').length;
+  const todayDateStr = new Date().toISOString().split('T')[0];
+  const todayLateCount = (attendance || []).filter(a => a?.date === todayDateStr && a?.status === 'Late').length;
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['applicant', 'teacher', 'principal', 'admin'], locked: false },
+    // Dedicated GPS Attendance Module (Excluded for applicants/scholars who are applying)
+    { 
+      id: 'attendance', 
+      label: role === 'teacher' ? 'Mark Attendance (GPS Cam)' : 'Faculty Geo-Attendance', 
+      icon: Camera, 
+      roles: ['teacher', 'principal', 'admin'], 
+      locked: false,
+      badge: (role === 'principal' || role === 'admin') && todayLateCount > 0 ? `${todayLateCount} Late` : null
+    },
     { 
       id: 'recruitment', 
       label: 'Recruitment & Job Repository', 

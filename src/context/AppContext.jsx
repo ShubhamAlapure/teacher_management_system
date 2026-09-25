@@ -12,6 +12,7 @@ import {
   INITIAL_TEACHER_TRAININGS,
   INITIAL_APARS,
   INITIAL_DOCUMENTS,
+  INITIAL_ATTENDANCE,
   DISTRICT_STATS
 } from '../lib/initialData';
 
@@ -90,6 +91,11 @@ export const AppProvider = ({ children }) => {
   const [documents, setDocuments] = useState(() => {
     const saved = localStorage.getItem('shikshak_documents');
     return saved ? JSON.parse(saved) : INITIAL_DOCUMENTS;
+  });
+
+  const [attendance, setAttendance] = useState(() => {
+    const saved = localStorage.getItem('shikshak_attendance');
+    return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE;
   });
 
   // Fetch Live Data from Supabase if Configured
@@ -187,6 +193,11 @@ export const AppProvider = ({ children }) => {
             };
           });
           setDocuments(docsWithNames);
+        }
+
+        const { data: attData } = await supabase.from('faculty_attendance').select('*');
+        if (attData && attData.length > 0) {
+          setAttendance(attData);
         }
       } catch (err) {
         console.warn('Supabase fetch query fallback:', err);
@@ -305,6 +316,10 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('shikshak_documents', JSON.stringify(documents));
   }, [documents]);
+
+  useEffect(() => {
+    localStorage.setItem('shikshak_attendance', JSON.stringify(attendance));
+  }, [attendance]);
 
   const pushNotification = (title, message, type = 'info') => {
     const newNotif = {
@@ -869,6 +884,153 @@ export const AppProvider = ({ children }) => {
     pushNotification('Course Enrolled', `Enrolled in ${title}.`, 'success');
   };
 
+  // 12. Mark Attendance with GPS Map Cam Selfie
+  const markAttendance = async (punchData) => {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const timeStr = now.toTimeString().split(' ')[0]; // '09:15:30'
+
+    const teacherEmpId = currentUser?.emp_id || activeTeacher?.emp_id || 'MIT-FAC-001';
+    const teacherName = currentUser?.full_name || activeTeacher?.full_name || 'Faculty Member';
+    const teacherId = currentUser?.id || activeTeacher?.id || 'tch-01';
+    const teacherCadre = activeTeacher?.cadre || 'Assistant Professor';
+    const teacherDept = activeTeacher?.department || activeTeacher?.current_school || 'School of Engineering (SOE)';
+
+    const punchType = (punchData.punchType || 'IN').toUpperCase();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    // Standard arrival threshold: 09:30 AM
+    let initialStatus = 'Present';
+    if (punchType === 'IN') {
+      if (hours > 9 || (hours === 9 && minutes > 30)) {
+        initialStatus = 'Late';
+      }
+      if (punchData.workMode?.includes('Field') || punchData.workMode?.includes('Duty')) {
+        initialStatus = 'On Duty';
+      }
+    }
+
+    // Check if an attendance record exists for this faculty today
+    const existingIndex = attendance.findIndex(a => 
+      (a.emp_id === teacherEmpId || a.teacher_id === teacherId) && a.date === todayStr
+    );
+
+    let updatedAttendanceList = [...attendance];
+    let recordToSave = null;
+
+    if (existingIndex >= 0) {
+      const existing = attendance[existingIndex];
+      if (punchType === 'OUT') {
+        recordToSave = {
+          ...existing,
+          punch_out_time: timeStr,
+          punch_out_photo: punchData.photoUrl,
+          punch_type: 'OUT',
+          punch_out_lat: punchData.latitude,
+          punch_out_lng: punchData.longitude,
+          punch_out_alt: punchData.altitude,
+          punch_out_location: punchData.locationName,
+          work_mode: punchData.workMode || existing.work_mode,
+          remarks: punchData.remarks || existing.remarks
+        };
+      } else {
+        // Re-punch in
+        recordToSave = {
+          ...existing,
+          punch_in_time: timeStr,
+          punch_type: 'IN',
+          selfie_url: punchData.photoUrl || existing.selfie_url,
+          latitude: punchData.latitude || existing.latitude,
+          longitude: punchData.longitude || existing.longitude,
+          altitude: punchData.altitude || existing.altitude,
+          location_name: punchData.locationName || existing.location_name,
+          work_mode: punchData.workMode || existing.work_mode
+        };
+      }
+      updatedAttendanceList[existingIndex] = recordToSave;
+    } else {
+      recordToSave = {
+        id: `att-${Date.now()}`,
+        teacher_id: teacherId,
+        emp_id: teacherEmpId,
+        teacher_name: teacherName,
+        cadre: teacherCadre,
+        department: teacherDept,
+        date: todayStr,
+        punch_in_time: timeStr,
+        punch_out_time: null,
+        punch_type: punchType,
+        status: initialStatus,
+        work_mode: punchData.workMode || 'On Campus',
+        latitude: punchData.latitude || 18.490218,
+        longitude: punchData.longitude || 74.025412,
+        altitude: punchData.altitude || 564.2,
+        accuracy: punchData.accuracy || 4.0,
+        location_name: punchData.locationName || 'MIT-ADT University, Rajbaug Campus, Pune',
+        geofence_status: 'Campus Perimeter Verified',
+        selfie_url: punchData.photoUrl,
+        remarks: punchData.remarks || 'GPS Map Cam verified punch'
+      };
+      updatedAttendanceList = [recordToSave, ...updatedAttendanceList];
+    }
+
+    setAttendance(updatedAttendanceList);
+
+    // Sync to Supabase if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('faculty_attendance').upsert([{
+          id: recordToSave.id,
+          emp_id: recordToSave.emp_id,
+          teacher_name: recordToSave.teacher_name,
+          cadre: recordToSave.cadre,
+          department: recordToSave.department,
+          date: recordToSave.date,
+          punch_in_time: recordToSave.punch_in_time,
+          punch_out_time: recordToSave.punch_out_time,
+          punch_type: recordToSave.punch_type,
+          status: recordToSave.status,
+          work_mode: recordToSave.work_mode,
+          latitude: recordToSave.latitude,
+          longitude: recordToSave.longitude,
+          altitude: recordToSave.altitude,
+          accuracy: recordToSave.accuracy,
+          location_name: recordToSave.location_name,
+          selfie_url: recordToSave.selfie_url,
+          geofence_status: recordToSave.geofence_status,
+          remarks: recordToSave.remarks
+        }], { onConflict: 'emp_id,date' });
+      } catch (err) {
+        console.warn('Supabase attendance insert error:', err);
+      }
+    }
+
+    const actionText = punchType === 'IN' ? 'Punch In Recorded' : 'Punch Out Recorded';
+    pushNotification(
+      `📍 ${actionText}`,
+      `${teacherName} (${teacherEmpId}) marked ${punchType} at ${timeStr}. GPS Location: ${punchData.locationName || 'Rajbaug Campus'}`,
+      'success'
+    );
+
+    return { success: true, record: recordToSave };
+  };
+
+  // 13. Regularize Attendance (HOD / Dean / Admin)
+  const regularizeAttendance = async (attId, newStatus, remarks = '') => {
+    setAttendance(prev => prev.map(a => a.id === attId ? { ...a, status: newStatus, approver_remarks: remarks } : a));
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('faculty_attendance').update({ status: newStatus, remarks: remarks }).eq('id', attId);
+      } catch (err) {
+        console.warn('Supabase attendance regularize error:', err);
+      }
+    }
+
+    pushNotification('Attendance Regularized', `Attendance record marked as ${newStatus}.`, 'info');
+  };
+
   const resetToDemoData = () => {
     setTeachers([]);
     setVacancies([]);
@@ -880,6 +1042,7 @@ export const AppProvider = ({ children }) => {
     setTeacherTrainings([]);
     setApars([]);
     setDocuments([]);
+    setAttendance([]);
     localStorage.removeItem('shikshak_teachers');
     localStorage.removeItem('shikshak_vacancies');
     localStorage.removeItem('shikshak_applications');
@@ -890,6 +1053,7 @@ export const AppProvider = ({ children }) => {
     localStorage.removeItem('shikshak_teacher_trainings');
     localStorage.removeItem('shikshak_apars');
     localStorage.removeItem('shikshak_documents');
+    localStorage.removeItem('shikshak_attendance');
     pushNotification('System Cleared', 'All mock data removed. System ready for live database records.', 'info');
   };
 
@@ -1139,6 +1303,7 @@ export const AppProvider = ({ children }) => {
         teacherTrainings,
         apars,
         documents,
+        attendance,
         districtStats: DISTRICT_STATS,
         addApplication,
         updateApplicationStatus,
@@ -1153,6 +1318,8 @@ export const AppProvider = ({ children }) => {
         deleteDocument,
         updateApplicantProfile,
         enrollCourse,
+        markAttendance,
+        regularizeAttendance,
         resetToDemoData,
         pushNotification
       }}

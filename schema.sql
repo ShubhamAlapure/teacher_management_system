@@ -165,13 +165,44 @@ CREATE TABLE IF NOT EXISTS teacher_documents (
   uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 8. ROW LEVEL SECURITY (RLS) POLICIES
+-- 8. FACULTY GPS MAP CAM GEO-ATTENDANCE MODULE
+CREATE TABLE IF NOT EXISTS faculty_attendance (
+  id VARCHAR(100) PRIMARY KEY,
+  teacher_id UUID REFERENCES teachers(id) ON DELETE SET NULL,
+  emp_id VARCHAR(50) NOT NULL,
+  teacher_name VARCHAR(100) NOT NULL,
+  cadre VARCHAR(100),
+  department VARCHAR(150),
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  punch_in_time TIME,
+  punch_out_time TIME,
+  punch_type VARCHAR(20) DEFAULT 'IN',
+  status VARCHAR(30) DEFAULT 'Present', -- Present, Late, On Duty, Half Day
+  work_mode VARCHAR(100) DEFAULT 'On Campus',
+  latitude NUMERIC(10, 6),
+  longitude NUMERIC(10, 6),
+  altitude NUMERIC(8, 2), -- Altitude in meters above sea level (ASL)
+  accuracy NUMERIC(8, 2), -- Precision in meters
+  location_name TEXT,
+  selfie_url TEXT NOT NULL, -- GPS Map Cam stamped selfie photo
+  geofence_status VARCHAR(100) DEFAULT 'Campus Perimeter Verified',
+  remarks TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT unique_teacher_date UNIQUE (emp_id, date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_faculty_attendance_date ON faculty_attendance(date);
+CREATE INDEX IF NOT EXISTS idx_faculty_attendance_emp_id ON faculty_attendance(emp_id);
+CREATE INDEX IF NOT EXISTS idx_faculty_attendance_status ON faculty_attendance(status);
+
+-- 9. ROW LEVEL SECURITY (RLS) POLICIES
 ALTER TABLE teachers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recruitment_applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transfer_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE leave_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE apar_evaluations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE teacher_documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE faculty_attendance ENABLE ROW LEVEL SECURITY;
 
 -- Allow full access for anon/publishable client inserts & queries
 DROP POLICY IF EXISTS "Allow public read teachers" ON teachers;
@@ -181,6 +212,7 @@ CREATE POLICY "Allow public all transfers" ON transfer_requests FOR ALL USING (t
 CREATE POLICY "Allow public all leaves" ON leave_requests FOR ALL USING (true);
 CREATE POLICY "Allow public all apar" ON apar_evaluations FOR ALL USING (true);
 CREATE POLICY "Allow public all docs" ON teacher_documents FOR ALL USING (true);
+CREATE POLICY "Allow public all attendance" ON faculty_attendance FOR ALL USING (true);
 
 -- 9. INITIAL SYSTEM SEED DATA (MASTER ADMIN & DEAN),HOD,HOI(Higher Authority)
 INSERT INTO teachers (

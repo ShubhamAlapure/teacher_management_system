@@ -24,7 +24,9 @@ import {
   Building2,
   FileCheck,
   ArrowRight,
-  BookOpen
+  BookOpen,
+  Camera,
+  MapPin
 } from 'lucide-react';
 
 
@@ -51,7 +53,8 @@ export const OverviewDashboard = () => {
     role, 
     activeTeacher,
     currentUser,
-    leaveBalances
+    leaveBalances,
+    attendance
   } = useApp();
 
   const displayName = currentUser?.full_name || activeTeacher?.full_name || 'MIT-ADT Staff';
@@ -71,6 +74,12 @@ export const OverviewDashboard = () => {
 
   // Personal leave balances for faculty
   const myLeaveBalance = (activeTeacher?.id && leaveBalances?.[activeTeacher.id]) || { casual: 8, medical: 10, earned: 14 };
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayAttendance = (attendance || []).filter(a => a?.date === todayStr);
+  const myTodayPunch = (attendance || []).find(a => 
+    (a.emp_id === displayId || a.teacher_id === activeTeacher?.id) && a.date === todayStr
+  );
 
   return (
     <div className="space-y-6 font-sans">
@@ -105,7 +114,29 @@ export const OverviewDashboard = () => {
           </div>
 
           {/* HOD Action Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div 
+              onClick={() => setActiveTab('attendance')}
+              className="p-5 rounded-2xl bg-white border border-purple-100 hover:border-purple-300 shadow-sm cursor-pointer transition-all space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-purple-100 text-purple-700">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                  {todayAttendance.length} Punched Today
+                </span>
+              </div>
+              <div>
+                <h4 className="text-sm font-extrabold text-purple-950">Faculty Geo-Attendance</h4>
+                <p className="text-xs text-slate-500 mt-0.5">Surveil live GPS Map Cam selfie proofs, lat/long & campus geofence.</p>
+              </div>
+              <div className="flex items-center text-xs font-bold text-purple-700 gap-1 pt-1">
+                <span>Open Monitoring Desk</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
             <div 
               onClick={() => setActiveTab('leaves')}
               className="p-5 rounded-2xl bg-white border border-purple-100 hover:border-purple-300 shadow-sm cursor-pointer transition-all space-y-3"
@@ -249,7 +280,40 @@ export const OverviewDashboard = () => {
             </div>
           </div>
 
-          {/* Quick Action Cards */}
+          {/* Interactive Quick Attendance Action Card */}
+          <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white rounded-3xl p-5 shadow-lg border border-purple-700/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-purple-600/50 border border-purple-400/40 flex items-center justify-center text-yellow-300 shrink-0 shadow-md">
+                <Camera className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-extrabold text-white">Daily Smart GPS Attendance</h4>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                    myTodayPunch 
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' 
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                  }`}>
+                    {myTodayPunch ? (myTodayPunch.punch_out_time ? 'Punched Out' : 'Punched In') : 'Not Checked In'}
+                  </span>
+                </div>
+                <p className="text-xs text-purple-200 mt-0.5">
+                  {myTodayPunch 
+                    ? `Recorded at ${myTodayPunch.punch_in_time} • ${myTodayPunch.location_name}`
+                    : 'Camera captures your selfie with stamped location name, lat/long & altitude (ASL).'
+                  }
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setActiveTab('attendance')}
+              className="py-2.5 px-5 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2 shrink-0"
+            >
+              <Camera className="w-4 h-4" />
+              <span>{myTodayPunch ? 'View / Punch Out' : 'Open GPS Camera'} &rarr;</span>
+            </button>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div
               onClick={() => setActiveTab('service_book')}

@@ -13,6 +13,7 @@ import { LeavePayrollModule } from './components/LeavePayroll/LeavePayrollModule
 import { TrainingAppraisalModule } from './components/TrainingAppraisal/TrainingAppraisalModule';
 import { DocumentVaultModule } from './components/DocumentVault/DocumentVaultModule';
 import { AnalyticsModule } from './components/Analytics/AnalyticsModule';
+import { AttendanceModule } from './components/Attendance/AttendanceModule';
 import { NotificationsModal } from './components/NotificationsModal';
 import { SupabaseConfigModal } from './components/SupabaseConfigModal';
 import { ShortlistProfileModal } from './components/ShortlistProfileModal';
@@ -24,6 +25,7 @@ const MainContent = () => {
     switch (activeTab) {
       case 'recruitment': return <RecruitmentModule />;
       case 'faculties':   return <FacultiesModule />;
+      case 'attendance':  return <AttendanceModule />;
       case 'service_book': return <ServiceBookModule />;
       case 'transfers':   return <TransferPromotionModule />;
       case 'leaves':      return <LeavePayrollModule />;
