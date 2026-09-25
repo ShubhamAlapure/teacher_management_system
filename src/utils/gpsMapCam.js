@@ -94,6 +94,7 @@ export function getDistanceMeters(lat1, lon1, lat2, lon2) {
  */
 export function renderGpsMapCamCanvas({
   sourceImage,
+  isMirrored = false,
   facultyName = 'Faculty Member',
   empId = 'MIT-FAC-001',
   cadre = 'Assistant Professor',
@@ -115,28 +116,49 @@ export function renderGpsMapCamCanvas({
   canvas.height = height;
   const ctx = canvas.getContext('2d');
 
-  // 1. Draw source image (mirrored if requested or cropped to fill)
+  // 1. Determine actual dimensions of source image or video element
+  let imgWidth = 0;
+  let imgHeight = 0;
+
   if (sourceImage) {
-    const imgRatio = sourceImage.width / sourceImage.height;
+    if (sourceImage.videoWidth && sourceImage.videoHeight) {
+      // HTMLVideoElement
+      imgWidth = sourceImage.videoWidth;
+      imgHeight = sourceImage.videoHeight;
+    } else if (sourceImage.naturalWidth && sourceImage.naturalHeight) {
+      // HTMLImageElement
+      imgWidth = sourceImage.naturalWidth;
+      imgHeight = sourceImage.naturalHeight;
+    } else if (sourceImage.width && sourceImage.height) {
+      imgWidth = sourceImage.width;
+      imgHeight = sourceImage.height;
+    }
+  }
+
+  const hasValidSource = sourceImage && imgWidth > 0 && imgHeight > 0;
+
+  if (hasValidSource) {
+    const imgRatio = imgWidth / imgHeight;
     const canvasRatio = width / height;
     let renderW = width;
     let renderH = height;
-    let offsetX = 0;
-    let offsetY = 0;
 
     if (imgRatio > canvasRatio) {
       renderW = height * imgRatio;
-      offsetX = -(renderW - width) / 2;
     } else {
       renderH = width / imgRatio;
-      offsetY = -(renderH - height) / 2;
     }
 
     ctx.save();
-    ctx.drawImage(sourceImage, offsetX, offsetY, renderW, renderH);
+    // Center transform for clean crop & mirror support
+    ctx.translate(width / 2, height / 2);
+    if (isMirrored) {
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(sourceImage, -renderW / 2, -renderH / 2, renderW, renderH);
     ctx.restore();
   } else {
-    // Elegant fallback selfie silhouette background
+    // Fallback if camera stream wasn't ready or was blank
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
     bgGrad.addColorStop(0, '#1e1138');
     bgGrad.addColorStop(0.5, '#2e1854');
@@ -144,17 +166,21 @@ export function renderGpsMapCamCanvas({
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle face oval guide
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = 3;
+    // Subtle face silhouette
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.ellipse(width / 2, height * 0.38, 200, 260, 0, 0, Math.PI * 2);
+    ctx.ellipse(width / 2, height * 0.38, 180, 240, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.font = 'bold 24px sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('FACULTY VERIFIED SELFIE', width / 2, height * 0.38);
+    ctx.fillText('FACULTY VERIFIED ATTENDANCE', width / 2, height * 0.38);
+
+    ctx.fillStyle = '#c084fc';
+    ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
+    ctx.fillText(facultyName, width / 2, height * 0.38 + 42);
   }
 
   // 2. Top Header Overlay (GPS Live HUD Tag)

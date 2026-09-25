@@ -149,7 +149,12 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.setAttribute('autoplay', 'true');
+        videoRef.current.setAttribute('muted', 'true');
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(e => console.warn('Play video stream error:', e));
+        };
       }
       setCameraState('streaming');
     } catch (err) {
@@ -186,6 +191,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
     // Burn GPS overlay directly onto image
     const stampedDataUrl = renderGpsMapCamCanvas({
       sourceImage: videoEl,
+      isMirrored: facingMode === 'user',
       facultyName: teacherName,
       empId: teacherId,
       cadre: teacherCadre,
@@ -220,6 +226,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
       img.onload = () => {
         const stampedDataUrl = renderGpsMapCamCanvas({
           sourceImage: img,
+          isMirrored: false,
           facultyName: teacherName,
           empId: teacherId,
           cadre: teacherCadre,
