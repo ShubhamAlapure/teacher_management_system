@@ -95,7 +95,16 @@ export const AppProvider = ({ children }) => {
 
   const [attendance, setAttendance] = useState(() => {
     const saved = localStorage.getItem('shikshak_attendance');
-    return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Exclude dummy seed records so only real user punches remain
+        return parsed.filter(a => !a.id?.startsWith('att-20260925-') && !a.id?.startsWith('att-20260924-'));
+      } catch (err) {
+        return [];
+      }
+    }
+    return INITIAL_ATTENDANCE;
   });
 
   // Fetch Live Data from Supabase if Configured
