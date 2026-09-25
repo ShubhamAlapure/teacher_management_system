@@ -48,7 +48,7 @@ export const Navbar = () => {
   };
 
   return (
-    <header className="h-16 bg-gradient-to-r from-[#1e0b3b] via-[#311363] to-[#451884] text-white border-b border-purple-800/40 px-4 lg:px-6 flex items-center justify-between shadow-lg sticky top-0 z-40">
+    <header className="no-print h-16 bg-gradient-to-r from-[#1e0b3b] via-[#311363] to-[#451884] text-white border-b border-purple-800/40 px-4 lg:px-6 flex items-center justify-between shadow-lg sticky top-0 z-40">
       
       {/* Brand & Logo */}
       <div className="flex items-center gap-4">

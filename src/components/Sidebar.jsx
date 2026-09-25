@@ -91,7 +91,7 @@ export const Sidebar = () => {
   const visibleMenuItems = menuItems.filter(item => item.roles.includes(role));
 
   return (
-    <aside className="w-64 bg-white border-r border-purple-100 shrink-0 hidden lg:flex flex-col justify-between p-4 min-h-[calc(100vh-65px)] shadow-sm">
+    <aside className="no-print w-64 bg-white border-r border-purple-100 shrink-0 hidden lg:flex flex-col justify-between p-4 min-h-[calc(100vh-65px)] shadow-sm">
       <div className="space-y-6">
         
         {/* Sidebar Navigation (Matching screenshot menu styling) */}

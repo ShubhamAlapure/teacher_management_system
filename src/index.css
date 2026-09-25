@@ -82,13 +82,65 @@
   background: #7c3aed;
 }
 
-/* Print Utilities */
+/* Print Utilities & Official Document Layout */
 @media print {
-  body {
-    background: white !important;
-    color: black !important;
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm 8mm 10mm;
   }
+
+  /* Hide navigation, toolbars, buttons, notifications, modals */
+  header, 
+  aside, 
+  nav,
+  button,
+  select,
   .no-print {
     display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #root,
+  .min-h-screen,
+  main {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .print-table th,
+  .print-table td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 5px 8px !important;
+  }
+
+  .print-table th {
+    background-color: #f1f5f9 !important;
+    font-weight: 700 !important;
   }
 }
