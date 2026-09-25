@@ -900,10 +900,15 @@ export const AppProvider = ({ children }) => {
     const hours = now.getHours();
     const minutes = now.getMinutes();
 
-    // Standard arrival threshold: 09:30 AM
+    // University Shift Rules:
+    // 1. Arrival Window: 08:45 AM - 09:00 AM. Arrival after 09:00 AM is flagged as 'Late'
+    // 2. Departure Cutoff: 03:30 PM (15:30). Departure before 03:30 PM is flagged as 'Early Left'
+    const isLateArrival = (hours > 9) || (hours === 9 && minutes > 0);
+    const isEarlyDeparture = (hours < 15) || (hours === 15 && minutes < 30);
+
     let initialStatus = 'Present';
     if (punchType === 'IN') {
-      if (hours > 9 || (hours === 9 && minutes > 30)) {
+      if (isLateArrival) {
         initialStatus = 'Late';
       }
       if (punchData.workMode?.includes('Field') || punchData.workMode?.includes('Duty')) {
@@ -922,17 +927,38 @@ export const AppProvider = ({ children }) => {
     if (existingIndex >= 0) {
       const existing = attendance[existingIndex];
       if (punchType === 'OUT') {
+        // Calculate total hours
+        let workingDuration = null;
+        if (existing.punch_in_time) {
+          const [inH, inM] = existing.punch_in_time.split(':').map(Number);
+          const totalMins = (hours * 60 + minutes) - (inH * 60 + inM);
+          if (totalMins > 0) {
+            workingDuration = `${Math.floor(totalMins / 60)}h ${totalMins % 60}m`;
+          }
+        }
+
+        // Determine final departure status
+        let finalStatus = existing.status || 'Present';
+        if (isEarlyDeparture) {
+          finalStatus = existing.status === 'Late' ? 'Late & Early Left' : 'Early Left';
+        } else if (existing.status === 'Early Left') {
+          finalStatus = existing.is_late ? 'Late' : 'Present';
+        }
+
         recordToSave = {
           ...existing,
           punch_out_time: timeStr,
           punch_out_photo: punchData.photoUrl,
           punch_type: 'OUT',
+          status: finalStatus,
+          is_early_left: isEarlyDeparture,
+          working_duration: workingDuration,
           punch_out_lat: punchData.latitude,
           punch_out_lng: punchData.longitude,
           punch_out_alt: punchData.altitude,
           punch_out_location: punchData.locationName,
           work_mode: punchData.workMode || existing.work_mode,
-          remarks: punchData.remarks || existing.remarks
+          remarks: punchData.remarks || (isEarlyDeparture ? 'Early departure before 03:30 PM' : existing.remarks)
         };
       } else {
         // Re-punch in
@@ -940,6 +966,8 @@ export const AppProvider = ({ children }) => {
           ...existing,
           punch_in_time: timeStr,
           punch_type: 'IN',
+          status: isLateArrival ? 'Late' : 'Present',
+          is_late: isLateArrival,
           selfie_url: punchData.photoUrl || existing.selfie_url,
           latitude: punchData.latitude || existing.latitude,
           longitude: punchData.longitude || existing.longitude,
@@ -962,6 +990,8 @@ export const AppProvider = ({ children }) => {
         punch_out_time: null,
         punch_type: punchType,
         status: initialStatus,
+        is_late: isLateArrival,
+        is_early_left: false,
         work_mode: punchData.workMode || 'On Campus',
         latitude: punchData.latitude || 18.490218,
         longitude: punchData.longitude || 74.025412,
@@ -970,7 +1000,7 @@ export const AppProvider = ({ children }) => {
         location_name: punchData.locationName || 'MIT-ADT University, Rajbaug Campus, Pune',
         geofence_status: 'Campus Perimeter Verified',
         selfie_url: punchData.photoUrl,
-        remarks: punchData.remarks || 'GPS Map Cam verified punch'
+        remarks: isLateArrival ? 'Late punch in after 09:00 AM' : 'On-time arrival within 08:45 - 09:00 AM'
       };
       updatedAttendanceList = [recordToSave, ...updatedAttendanceList];
     }

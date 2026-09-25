@@ -69,6 +69,10 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
                   record.status === 'Present'
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                    : record.status === 'Early Left'
+                    ? 'bg-orange-500/20 text-orange-300 border border-orange-400/30'
+                    : record.status === 'Late & Early Left'
+                    ? 'bg-rose-500/20 text-rose-300 border border-rose-400/30'
                     : record.status === 'Late'
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
                     : 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
@@ -179,7 +183,12 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
 
                 <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200 text-slate-600">
                   <span><strong>Work Mode:</strong> {record.work_mode || 'On Campus'}</span>
+                  <span><strong>Duration:</strong> {record.working_duration || 'In Progress'}</span>
                   <span><strong>Date:</strong> {record.date}</span>
+                </div>
+                <div className="p-2 rounded-xl bg-purple-50/60 border border-purple-100 text-[10px] text-purple-900 flex items-center justify-between">
+                  <span><strong>Shift Rule:</strong> 08:45 AM - 03:30 PM</span>
+                  <span>Grace Arrival: 09:00 AM &bull; No Exit Before 03:30 PM</span>
                 </div>
               </div>
 
@@ -232,8 +241,8 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
 
                   {isEditingStatus ? (
                     <div className="space-y-2.5">
-                      <div className="grid grid-cols-3 gap-2">
-                        {['Present', 'Late', 'On Duty'].map((s) => (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {['Present', 'Late', 'Early Left', 'On Duty'].map((s) => (
                           <button
                             key={s}
                             type="button"

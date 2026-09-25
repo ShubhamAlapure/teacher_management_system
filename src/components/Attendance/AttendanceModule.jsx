@@ -82,8 +82,14 @@ export const AttendanceModule = () => {
       }
 
       // Status filter
-      if (selectedStatus !== 'All' && record.status !== selectedStatus) {
-        return false;
+      if (selectedStatus !== 'All') {
+        if (selectedStatus === 'Early Left') {
+          if (!record.status?.includes('Early Left') && !record.is_early_left) return false;
+        } else if (selectedStatus === 'Late') {
+          if (!record.status?.includes('Late') && !record.is_late) return false;
+        } else if (record.status !== selectedStatus) {
+          return false;
+        }
       }
 
       // Search query filter
@@ -105,7 +111,8 @@ export const AttendanceModule = () => {
     const todayRecords = (attendance || []).filter(a => a.date === todayStr);
     const totalTeachers = teachers.filter(t => !['System Administrator', 'Master Administrator'].includes(t.cadre)).length || 24;
     const presentCount = todayRecords.filter(a => a.status === 'Present').length;
-    const lateCount = todayRecords.filter(a => a.status === 'Late').length;
+    const lateCount = todayRecords.filter(a => a.status === 'Late' || a.status?.includes('Late') || a.is_late).length;
+    const earlyLeftCount = todayRecords.filter(a => a.status?.includes('Early Left') || a.is_early_left).length;
     const onDutyCount = todayRecords.filter(a => a.status === 'On Duty').length;
     const geoVerifiedCount = todayRecords.filter(a => a.geofence_status?.includes('Verified') || a.latitude).length;
 
@@ -114,6 +121,7 @@ export const AttendanceModule = () => {
       totalPunched: todayRecords.length,
       present: presentCount,
       late: lateCount,
+      earlyLeft: earlyLeftCount,
       onDuty: onDutyCount,
       geoVerified: geoVerifiedCount,
       attendanceRate: Math.round((todayRecords.length / Math.max(1, totalTeachers)) * 100)
@@ -208,6 +216,9 @@ export const AttendanceModule = () => {
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-white/20 text-yellow-300 border border-white/20 uppercase tracking-wider">
                     GPS MAP CAM ATTENDANCE
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-purple-500/30 text-purple-200 border border-purple-400/30">
+                    Shift: 08:45 AM – 03:30 PM (Grace till 09:00 AM)
                   </span>
                   <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -527,21 +538,21 @@ export const AttendanceModule = () => {
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-1">
-              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">On-Time Arrivals</span>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">On-Time (8:45-9:00)</span>
               <p className="text-2xl font-black text-emerald-600">{stats.present}</p>
-              <span className="text-[10px] text-slate-500">Punched before 09:30 AM</span>
+              <span className="text-[10px] text-slate-500">Punched by 09:00 AM</span>
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-1">
               <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Late Arrivals</span>
               <p className="text-2xl font-black text-amber-600">{stats.late}</p>
-              <span className="text-[10px] text-slate-500">Subject to HOD review</span>
+              <span className="text-[10px] text-slate-500">Punched after 09:00 AM</span>
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-1">
-              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">On Duty / Field</span>
-              <p className="text-2xl font-black text-blue-600">{stats.onDuty}</p>
-              <span className="text-[10px] text-slate-500">Labs, Exams & Research</span>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Early Left (&lt; 3:30)</span>
+              <p className="text-2xl font-black text-orange-600">{stats.earlyLeft}</p>
+              <span className="text-[10px] text-slate-500">Departed before 03:30 PM</span>
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-1 col-span-2 sm:col-span-1">
@@ -589,9 +600,10 @@ export const AttendanceModule = () => {
                   className="py-1.5 px-2.5 rounded-xl border border-purple-200 text-xs text-slate-800 bg-white focus:outline-none focus:border-purple-600"
                 >
                   <option value="All">All Statuses</option>
-                  <option value="Present">Present Only</option>
-                  <option value="Late">Late Arrivals</option>
-                  <option value="On Duty">On Duty</option>
+                  <option value="Present">Present Only (On Time)</option>
+                  <option value="Late">Late Arrivals (&gt; 09:00 AM)</option>
+                  <option value="Early Left">Early Left (&lt; 03:30 PM)</option>
+                  <option value="On Duty">On Duty / Field</option>
                 </select>
               </div>
             </div>
@@ -718,6 +730,10 @@ export const AttendanceModule = () => {
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
                               record.status === 'Present'
                                 ? 'bg-emerald-100 text-emerald-800'
+                                : record.status === 'Early Left'
+                                ? 'bg-orange-100 text-orange-800'
+                                : record.status === 'Late & Early Left'
+                                ? 'bg-rose-100 text-rose-800'
                                 : record.status === 'Late'
                                 ? 'bg-amber-100 text-amber-800'
                                 : 'bg-blue-100 text-blue-800'
