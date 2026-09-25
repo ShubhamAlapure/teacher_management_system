@@ -303,6 +303,30 @@ export const INITIAL_TEACHERS = [
     qualification: 'M.Tech in Computer Networks', specialization: 'Network Security & Ethical Hacking',
     department: 'Information Technology (IT)',
     experience_years: 3, seniority_rank: 24, basic_pay: 57700, publications: 1, source: 'Initial Faculty'
+  },
+  {
+    id: 'tch-fac-demo', emp_id: 'MIT-FAC-2021-4091',
+    full_name: 'Dr. Suresh Verma',
+    email: 'suresh.verma@mituniversity.edu.in', phone: '+91 94220 11099',
+    gender: 'Male', dob: '1985-05-15', joining_date: '2021-08-01',
+    cadre: 'Assistant Professor', subject: 'Computer Science & Engineering',
+    current_school: 'School of Engineering & Technology (SOE)', district: 'Rajbaug Campus',
+    block: 'Loni Kalbhor', gpf_nps_no: 'PF-MIT-FAC-4091', service_status: 'Active',
+    qualification: 'Ph.D. in Computer Science', specialization: 'Cloud Computing & Cyber Security',
+    department: 'Computer Science & Engineering (CSE)',
+    experience_years: 6, seniority_rank: 25, basic_pay: 68900, publications: 5, source: 'Initial Faculty'
+  },
+  {
+    id: 'tch-app-demo', emp_id: 'MIT-APP-2026-9901',
+    full_name: 'Dr. Neha Deshmukh (Applicant)',
+    email: 'neha.applicant@gmail.com', phone: '+91 98220 99901',
+    gender: 'Female', dob: '1992-03-10', joining_date: '2026-01-01',
+    cadre: 'Applicant', subject: 'Artificial Intelligence & Machine Learning',
+    current_school: 'School of Engineering & Technology (SOE)', district: 'Rajbaug Campus',
+    block: 'Loni Kalbhor', gpf_nps_no: 'PF-MIT-APP-9901', service_status: 'Pending',
+    qualification: 'Ph.D. in Artificial Intelligence', specialization: 'Computer Vision & Deep Learning',
+    department: 'School of Engineering & Technology (SOE)',
+    experience_years: 3, seniority_rank: 26, basic_pay: 0, publications: 4, source: 'Applicant'
   }
 ];
 
