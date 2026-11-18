@@ -1,11 +1,19 @@
 // MIT-ADT University — GPS Map Camera & Geolocation Utility
+import { 
+  DEFAULT_CAMPUS_GEOFENCE_CONFIG, 
+  calculateHaversineDistanceMeters, 
+  validateCoordinatesAgainstGeofence 
+} from './geofenceConfig';
+
+export { DEFAULT_CAMPUS_GEOFENCE_CONFIG, validateCoordinatesAgainstGeofence };
 
 export const MIT_CAMPUS_COORDS = {
-  latitude: 18.490218,
-  longitude: 74.025412,
-  altitude: 564.2, // meters ASL
-  campusName: 'MIT-ADT University Rajbaug Campus',
-  address: 'MIT-ADT University, Rajbaug Educational Complex, Next to Hadapsar, Loni Kalbhor, Pune, Maharashtra 412201'
+  latitude: DEFAULT_CAMPUS_GEOFENCE_CONFIG.latitude,
+  longitude: DEFAULT_CAMPUS_GEOFENCE_CONFIG.longitude,
+  altitude: DEFAULT_CAMPUS_GEOFENCE_CONFIG.altitudeASL,
+  radiusMeters: DEFAULT_CAMPUS_GEOFENCE_CONFIG.radiusMeters,
+  campusName: DEFAULT_CAMPUS_GEOFENCE_CONFIG.campusName,
+  address: DEFAULT_CAMPUS_GEOFENCE_CONFIG.campusPremises
 };
 
 /**
@@ -357,16 +365,49 @@ export function renderGpsMapCamCanvas({
   ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
   ctx.fillText(`🕒 ${dateFormatted}  ${timeFormatted}`, textLeft, bannerY + 232);
 
+  // Validate geofence dynamically based on actual latitude, longitude, accuracy
+  const geofence = validateCoordinatesAgainstGeofence(latitude, longitude, accuracy);
+
   // Verification Badge Pill at bottom
   const pillY = bannerY + 258;
-  ctx.fillStyle = 'rgba(34, 197, 94, 0.15)';
-  ctx.strokeStyle = '#22c55e';
-  ctx.lineWidth = 1.5;
-  roundRect(ctx, textLeft, pillY, 480, 40, 20, true, true);
+  let pillBg = 'rgba(34, 197, 94, 0.15)';
+  let pillBorder = '#22c55e';
+  let pillTextColor = '#4ade80';
+  let pillLabel = '✓  GEO-FENCED PERIMETER VERIFIED • RAJBAUG CAMPUS';
 
-  ctx.fillStyle = '#4ade80';
-  ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
-  ctx.fillText('✓  GEO-FENCED PERIMETER VERIFIED • RAJBAUG CAMPUS', textLeft + 20, pillY + 26);
+  if (geofence.status === 'OUTSIDE_CAMPUS') {
+    pillBg = 'rgba(239, 68, 68, 0.2)';
+    pillBorder = '#ef4444';
+    pillTextColor = '#f87171';
+    const distText = geofence.distanceMeters >= 1000 
+      ? `${(geofence.distanceMeters / 1000).toFixed(1)}km` 
+      : `${geofence.distanceMeters}m`;
+    pillLabel = `✗  OUTSIDE CAMPUS BOUNDARY (${distText} AWAY) • UNVERIFIED`;
+  } else if (geofence.status === 'UNCERTAIN_ACCURACY') {
+    pillBg = 'rgba(245, 158, 11, 0.2)';
+    pillBorder = '#f59e0b';
+    pillTextColor = '#fbbf24';
+    pillLabel = `⚠️  LOCATION UNCERTAIN • HIGH GPS MARGIN (±${geofence.accuracyMeters}m)`;
+  } else if (geofence.status === 'BOUNDARY_UNCERTAIN') {
+    pillBg = 'rgba(245, 158, 11, 0.2)';
+    pillBorder = '#f59e0b';
+    pillTextColor = '#fbbf24';
+    pillLabel = '⚠️  CAMPUS BOUNDARY UNCERTAIN • VERIFICATION PENDING';
+  } else if (geofence.status === 'INVALID_GPS') {
+    pillBg = 'rgba(239, 68, 68, 0.2)';
+    pillBorder = '#ef4444';
+    pillTextColor = '#f87171';
+    pillLabel = '✗  GPS SIGNAL UNAVAILABLE • LOCATION UNVERIFIED';
+  }
+
+  ctx.fillStyle = pillBg;
+  ctx.strokeStyle = pillBorder;
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, textLeft, pillY, 540, 40, 20, true, true);
+
+  ctx.fillStyle = pillTextColor;
+  ctx.font = 'bold 15px system-ui, -apple-system, sans-serif';
+  ctx.fillText(pillLabel, textLeft + 16, pillY + 26);
 
   // Subtle digital anti-tamper watermark code
   const secureHash = `SHA256: ${(Math.random().toString(36).substring(2, 10) + Date.now().toString(36)).toUpperCase()}`;

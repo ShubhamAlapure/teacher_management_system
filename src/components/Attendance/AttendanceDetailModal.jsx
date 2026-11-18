@@ -14,9 +14,12 @@ import {
   Building2, 
   ShieldCheck,
   Check,
-  Edit2
+  Edit2,
+  AlertTriangle,
+  LocateFixed
 } from 'lucide-react';
 import { formatCoordinates } from '../../utils/gpsMapCam';
+import { validateCoordinatesAgainstGeofence } from '../../utils/geofenceConfig';
 
 export const AttendanceDetailModal = ({ record, onClose }) => {
   const { role, regularizeAttendance } = useApp();
@@ -28,8 +31,17 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
 
   if (!record) return null;
 
-  const coords = formatCoordinates(record.latitude || 18.490218, record.longitude || 74.025412);
-  const mapsUrl = `https://www.google.com/maps?q=${record.latitude || 18.490218},${record.longitude || 74.025412}`;
+  // Run authoritative geofence validation on this record's stored coordinates
+  const geoValidation = validateCoordinatesAgainstGeofence(
+    record.latitude,
+    record.longitude,
+    record.accuracy
+  );
+
+  const coords = formatCoordinates(record.latitude, record.longitude);
+  const mapsUrl = record.latitude && record.longitude
+    ? `https://www.google.com/maps?q=${record.latitude},${record.longitude}`
+    : 'https://www.google.com/maps?q=18.49259,74.02548';
 
   const handleSaveRegularization = async () => {
     setIsSaving(true);
@@ -55,17 +67,19 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in">
-      <div className="bg-white text-slate-900 w-full max-w-3xl rounded-3xl border border-purple-200 shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
+      <div className="bg-white text-slate-900 w-full max-w-3xl rounded-3xl border border-[#FFA2B6]/40 shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
         
         {/* Header */}
         <div className="px-6 py-4 bg-gradient-to-r from-[#1A110F] via-[#2A1612] to-[#3B1912] text-white flex items-center justify-between border-b border-[#E43D12]/30">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-purple-600/40 border border-purple-400/30 flex items-center justify-center text-purple-200">
-              <MapPin className="w-5 h-5 text-yellow-300" />
+            <div className="w-9 h-9 rounded-xl bg-[#E43D12]/20 border border-[#FFA2B6]/30 flex items-center justify-center text-[#FFA2B6]">
+              <MapPin className="w-5 h-5 text-[#EFB11D]" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                <span>GPS Map Cam Attendance Proof</span>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-extrabold text-white">
+                  GPS Map Cam Attendance Proof
+                </h3>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
                   record.status === 'Present'
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
@@ -79,16 +93,21 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
                 }`}>
                   {record.status}
                 </span>
-              </h3>
-              <p className="text-xs text-purple-200">
-                {record.teacher_name} &bull; <span className="font-mono text-yellow-300">{record.emp_id}</span>
+                {!geoValidation.isValid && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/30 text-rose-200 border border-rose-400/40 uppercase">
+                    Outside Perimeter
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-[#FFA2B6]">
+                {record.teacher_name} &bull; <span className="font-mono text-[#EFB11D]">{record.emp_id}</span>
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-purple-200 hover:text-white transition-all"
+            className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[#FFA2B6] hover:text-white transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -102,7 +121,7 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
             
             {/* Left: Tamper-Evident GPS Stamped Selfie */}
             <div className="space-y-3">
-              <div className="relative rounded-2xl overflow-hidden border-2 border-purple-200 bg-slate-950 shadow-md aspect-[4/5] flex items-center justify-center">
+              <div className="relative rounded-2xl overflow-hidden border-2 border-[#E2DDD2] bg-slate-950 shadow-md aspect-[4/5] flex items-center justify-center">
                 {record.selfie_url ? (
                   <img
                     src={record.selfie_url}
@@ -114,9 +133,20 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
                     No photo attached
                   </div>
                 )}
-                <div className="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-yellow-300 border border-yellow-400/30 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>GPS Map Cam Stamped</span>
+                
+                {/* Visual Pill Overlay on Photo */}
+                <div className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1.5 shadow-md">
+                  {geoValidation.isValid ? (
+                    <>
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-emerald-300">Campus Perimeter Verified</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                      <span className="text-rose-300">Outside Campus Boundary</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -124,9 +154,9 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
                 <button
                   type="button"
                   onClick={handleDownloadProof}
-                  className="flex-1 py-2 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 text-xs font-bold transition-all border border-purple-200 flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2 px-3 rounded-xl bg-[#FAF9F5] hover:bg-[#F4EFEA] text-[#1A1412] text-xs font-bold transition-all border border-[#E2DDD2] flex items-center justify-center gap-1.5"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3.5 h-3.5 text-[#E43D12]" />
                   <span>Download Stamped Proof</span>
                 </button>
                 <a
@@ -136,7 +166,7 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
                   className="flex-1 py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 text-xs font-bold transition-all border border-blue-200 flex items-center justify-center gap-1.5"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Open in Maps</span>
+                  <span>Open in Google Maps</span>
                 </a>
               </div>
             </div>
@@ -145,77 +175,113 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
             <div className="space-y-4">
               
               {/* Faculty Info Card */}
-              <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-100 space-y-2">
+              <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E2DDD2] space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold uppercase text-purple-900 tracking-wider">Faculty Information</span>
-                  <span className="text-xs font-mono font-bold text-purple-700">{record.emp_id}</span>
+                  <span className="text-[10px] font-extrabold uppercase text-[#5A524D] tracking-wider">Faculty Information</span>
+                  <span className="text-xs font-mono font-bold text-[#E43D12]">{record.emp_id}</span>
                 </div>
-                <h4 className="text-base font-extrabold text-slate-900">{record.teacher_name}</h4>
-                <div className="text-xs text-slate-600 space-y-1">
+                <h4 className="text-base font-extrabold text-[#1A1412]">{record.teacher_name}</h4>
+                <div className="text-xs text-[#5A524D] space-y-1">
                   <p className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-purple-600" />
+                    <User className="w-3.5 h-3.5 text-[#E43D12]" />
                     <span><strong>Cadre:</strong> {record.cadre || 'Assistant Professor'}</span>
                   </p>
                   <p className="flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-purple-600" />
+                    <Building2 className="w-3.5 h-3.5 text-[#E43D12]" />
                     <span><strong>Department:</strong> {record.department || 'School of Engineering (SOE)'}</span>
                   </p>
                 </div>
               </div>
 
               {/* Timing & Hours Card */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <span className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Punch Timings</span>
+              <div className="p-4 rounded-2xl bg-white border border-[#E2DDD2] space-y-3">
+                <span className="text-[10px] font-extrabold uppercase text-[#5A524D] tracking-wider">Punch Timings</span>
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Punch In Time</span>
+                  <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#E2DDD2]">
+                    <span className="text-[10px] text-[#5A524D] font-bold uppercase block">Punch In Time</span>
                     <span className="text-sm font-extrabold text-emerald-700 font-mono">
                       {record.punch_in_time || '—'}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Punch Out Time</span>
+                  <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#E2DDD2]">
+                    <span className="text-[10px] text-[#5A524D] font-bold uppercase block">Punch Out Time</span>
                     <span className="text-sm font-extrabold text-amber-700 font-mono">
                       {record.punch_out_time || 'Not punched yet'}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200 text-slate-600">
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-[#E2DDD2] text-[#5A524D]">
                   <span><strong>Work Mode:</strong> {record.work_mode || 'On Campus'}</span>
                   <span><strong>Duration:</strong> {record.working_duration || 'In Progress'}</span>
                   <span><strong>Date:</strong> {record.date}</span>
                 </div>
-                <div className="p-2 rounded-xl bg-purple-50/60 border border-purple-100 text-[10px] text-purple-900 flex items-center justify-between">
+                <div className="p-2 rounded-xl bg-[#FAF9F5] border border-[#E2DDD2] text-[10px] text-[#1A1412] flex items-center justify-between">
                   <span><strong>Shift Rule:</strong> 08:45 AM - 03:30 PM</span>
                   <span>Grace Arrival: 09:00 AM &bull; No Exit Before 03:30 PM</span>
                 </div>
               </div>
 
-              {/* Exact Location & GPS Coordinates */}
-              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-2 text-xs">
+              {/* Exact Location & GPS Geofence Telemetry */}
+              <div className={`p-4 rounded-2xl border space-y-2 text-xs ${
+                geoValidation.isValid
+                  ? 'bg-emerald-50/50 border-emerald-200'
+                  : 'bg-rose-50/60 border-rose-200'
+              }`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold uppercase text-amber-900 tracking-wider flex items-center gap-1">
-                    <Navigation className="w-3.5 h-3.5 text-amber-700" />
-                    <span>GPS Telemetry & Altitude</span>
+                  <span className={`text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 ${
+                    geoValidation.isValid ? 'text-emerald-900' : 'text-rose-900'
+                  }`}>
+                    <Navigation className="w-3.5 h-3.5" />
+                    <span>GPS Telemetry & Geofence Validation</span>
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
-                    Geofence Verified
+                  
+                  {/* Dynamic Geofence Badge */}
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                    geoValidation.isValid
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-rose-100 text-rose-800 border-rose-300'
+                  }`}>
+                    {geoValidation.isValid ? 'Perimeter Verified' : 'Outside Campus Boundary'}
                   </span>
+                </div>
+
+                {/* Explanatory Message */}
+                <div className={`p-2.5 rounded-xl border text-[11px] leading-relaxed ${
+                  geoValidation.isValid
+                    ? 'bg-emerald-100/60 border-emerald-300 text-emerald-900'
+                    : 'bg-rose-100/60 border-rose-300 text-rose-900 font-medium'
+                }`}>
+                  {geoValidation.message}
                 </div>
 
                 <div className="space-y-1.5 pt-1">
                   <p className="text-slate-800">
-                    <strong className="text-amber-900">Address:</strong> {record.location_name || 'MIT-ADT University, Rajbaug Campus, Pune'}
+                    <strong className="text-[#1A1412]">Physical Address:</strong> {record.location_name || 'MIT-ADT University, Rajbaug Campus, Pune'}
                   </p>
+                  
                   <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1">
-                    <div className="p-2 rounded-lg bg-white border border-amber-200">
-                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Coordinates</span>
-                      <span className="text-slate-900">{coords.combined}</span>
+                    <div className="p-2 rounded-lg bg-white border border-[#E2DDD2]">
+                      <span className="text-[9px] uppercase font-bold text-[#5A524D] block">Coordinates</span>
+                      <span className="text-slate-900 font-bold">{coords.combined}</span>
                     </div>
-                    <div className="p-2 rounded-lg bg-white border border-amber-200">
-                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Altitude</span>
-                      <span className="text-cyan-800 font-bold">{record.altitude ? `${record.altitude.toFixed(1)} m ASL` : '564.2 m ASL'}</span>
+                    <div className="p-2 rounded-lg bg-white border border-[#E2DDD2]">
+                      <span className="text-[9px] uppercase font-bold text-[#5A524D] block">Distance to Center</span>
+                      <span className={`font-bold ${geoValidation.isInsideCampus ? 'text-emerald-700' : 'text-rose-700'}`}>
+                        {geoValidation.distanceMeters != null ? `${geoValidation.distanceMeters}m (Radius: 850m)` : '—'}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-white border border-[#E2DDD2]">
+                      <span className="text-[9px] uppercase font-bold text-[#5A524D] block">Device Precision</span>
+                      <span className="text-slate-900 font-bold">
+                        &plusmn;{geoValidation.accuracyMeters != null ? `${geoValidation.accuracyMeters}m` : '4.5m'}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-white border border-[#E2DDD2]">
+                      <span className="text-[9px] uppercase font-bold text-[#5A524D] block">Altitude ASL</span>
+                      <span className="text-cyan-800 font-bold">
+                        {record.altitude ? `${record.altitude.toFixed(1)} m ASL` : '564.0 m ASL'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -223,16 +289,16 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
 
               {/* HOD / Dean Regularization Action Box */}
               {canRegularize && (
-                <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200 space-y-3">
+                <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E2DDD2] space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold uppercase text-purple-900 tracking-wider flex items-center gap-1">
-                      <Edit2 className="w-3.5 h-3.5 text-purple-700" />
-                      <span>HOD & Registrar Override / Note</span>
+                    <span className="text-[10px] font-extrabold uppercase text-[#1A1412] tracking-wider flex items-center gap-1">
+                      <Edit2 className="w-3.5 h-3.5 text-[#E43D12]" />
+                      <span>HOD & Registrar Override / Regularization</span>
                     </span>
                     {!isEditingStatus && (
                       <button
                         onClick={() => setIsEditingStatus(true)}
-                        className="text-xs font-bold text-purple-700 hover:text-purple-900 underline"
+                        className="text-xs font-bold text-[#E43D12] hover:underline"
                       >
                         Change Status
                       </button>
@@ -249,8 +315,8 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
                             onClick={() => setSelectedStatus(s)}
                             className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
                               selectedStatus === s
-                                ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                                : 'bg-white text-slate-700 border-purple-200 hover:bg-purple-50'
+                                ? 'bg-[#E43D12] text-white border-[#E43D12] shadow-sm'
+                                : 'bg-white text-slate-700 border-[#E2DDD2] hover:bg-slate-50'
                             }`}
                           >
                             {s}
@@ -263,14 +329,14 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
                         placeholder="Reason / Note for regularization..."
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
-                        className="w-full px-3 py-1.5 rounded-xl border border-purple-200 text-xs text-slate-800 bg-white focus:outline-none focus:border-purple-600"
+                        className="w-full px-3 py-1.5 rounded-xl border border-[#E2DDD2] text-xs text-slate-800 bg-white focus:outline-none focus:border-[#E43D12]"
                       />
 
                       <div className="flex justify-end gap-2 pt-1">
                         <button
                           type="button"
                           onClick={() => setIsEditingStatus(false)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-purple-100"
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200"
                         >
                           Cancel
                         </button>
@@ -278,7 +344,7 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
                           type="button"
                           disabled={isSaving}
                           onClick={handleSaveRegularization}
-                          className="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all flex items-center gap-1"
+                          className="px-4 py-1.5 rounded-xl bg-[#E43D12] hover:bg-[#C7310B] text-white text-xs font-bold transition-all flex items-center gap-1"
                         >
                           <Check className="w-3.5 h-3.5" />
                           <span>Save Regularization</span>
@@ -287,7 +353,7 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
                     </div>
                   ) : (
                     <p className="text-xs text-slate-600">
-                      {record.remarks || 'Standard GPS verified punch.'}
+                      {record.remarks || (geoValidation.isValid ? 'Standard GPS verified punch.' : 'Outside perimeter punch.')}
                     </p>
                   )}
                 </div>
@@ -301,9 +367,18 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
 
         {/* Footer */}
         <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-          <span className="flex items-center gap-1 font-medium">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Digital GPS Geofence Stamp &bull; Rajbaug Campus Perimeter OK</span>
+          <span className="flex items-center gap-1.5 font-medium">
+            {geoValidation.isValid ? (
+              <>
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span className="text-slate-700">Digital GPS Geofence Stamp &bull; Rajbaug Campus Perimeter OK ({geoValidation.distanceMeters}m from center)</span>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-4 h-4 text-rose-600" />
+                <span className="text-rose-700 font-bold">Digital GPS Geofence Stamp &bull; Location Flagged Outside Perimeter ({geoValidation.distanceMeters >= 1000 ? `${(geoValidation.distanceMeters / 1000).toFixed(2)} km` : `${geoValidation.distanceMeters} m`} away)</span>
+              </>
+            )}
           </span>
           <button
             onClick={onClose}

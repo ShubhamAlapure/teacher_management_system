@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Camera, 
@@ -11,11 +11,10 @@ import {
   X, 
   ShieldCheck, 
   Clock, 
-  Layers, 
-  Sliders, 
-  Check, 
   Upload,
-  ArrowRight
+  AlertOctagon,
+  LocateFixed,
+  Info
 } from 'lucide-react';
 import { 
   MIT_CAMPUS_COORDS, 
@@ -23,6 +22,10 @@ import {
   formatCoordinates, 
   renderGpsMapCamCanvas 
 } from '../../utils/gpsMapCam';
+import { 
+  validateCoordinatesAgainstGeofence, 
+  getActiveCampusGeofenceConfig 
+} from '../../utils/geofenceConfig';
 
 export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) => {
   const { currentUser, activeTeacher, markAttendance } = useApp();
@@ -40,15 +43,12 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
   const [workMode, setWorkMode] = useState('On Campus');
   const [remarks, setRemarks] = useState('');
 
-  // Live GPS Telemetry
-  const [coords, setCoords] = useState({
-    latitude: MIT_CAMPUS_COORDS.latitude,
-    longitude: MIT_CAMPUS_COORDS.longitude,
-    altitude: MIT_CAMPUS_COORDS.altitude,
-    accuracy: 3.8
-  });
-  const [locationName, setLocationName] = useState(MIT_CAMPUS_COORDS.campusName);
-  const [isGpsLoading, setIsGpsLoading] = useState(true);
+  // Live GPS Telemetry - NEVER default to fake campus coordinates
+  const [coords, setCoords] = useState(null); // null until locked
+  const [gpsStatus, setGpsStatus] = useState('acquiring'); // 'acquiring' | 'locked' | 'denied' | 'error' | 'timeout'
+  const [gpsErrorMsg, setGpsErrorMsg] = useState(null);
+  const [geofenceResult, setGeofenceResult] = useState(null);
+  const [locationName, setLocationName] = useState('Acquiring physical location...');
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Captured output
@@ -70,57 +70,92 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
     return () => clearInterval(timer);
   }, []);
 
-  // 2. Fetch High-Accuracy GPS Location & Reverse Geocode
-  useEffect(() => {
-    let isMounted = true;
+  // 2. High-Accuracy GPS Acquisition Engine (Strict - No Fake Fallback)
+  const acquireFreshLocation = useCallback(async () => {
+    setGpsStatus('acquiring');
+    setGpsErrorMsg(null);
 
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          if (!isMounted) return;
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          const alt = position.coords.altitude !== null ? position.coords.altitude : MIT_CAMPUS_COORDS.altitude;
-          const acc = position.coords.accuracy || 4.0;
-
-          setCoords({
-            latitude: lat,
-            longitude: lng,
-            altitude: alt,
-            accuracy: acc
-          });
-
-          // Reverse geocode
-          const geoRes = await reverseGeocode(lat, lng);
-          if (isMounted) {
-            setLocationName(geoRes.locationName);
-            setIsGpsLoading(false);
-          }
-        },
-        (error) => {
-          console.warn('Geolocation error/denied:', error.message);
-          if (isMounted) {
-            // Default to MIT-ADT Rajbaug Campus
-            setCoords({
-              latitude: MIT_CAMPUS_COORDS.latitude,
-              longitude: MIT_CAMPUS_COORDS.longitude,
-              altitude: MIT_CAMPUS_COORDS.altitude,
-              accuracy: 4.5
-            });
-            setLocationName(MIT_CAMPUS_COORDS.address);
-            setIsGpsLoading(false);
-          }
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-      );
-    } else {
-      setIsGpsLoading(false);
+    if (!('geolocation' in navigator)) {
+      setGpsStatus('error');
+      setGpsErrorMsg('Geolocation API is not supported by your browser.');
+      setLocationName('GPS API Unsupported');
+      const badValidation = validateCoordinatesAgainstGeofence(null, null, null);
+      setGeofenceResult(badValidation);
+      return;
     }
 
-    return () => {
-      isMounted = false;
-    };
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const alt = position.coords.altitude !== null ? position.coords.altitude : 564.0;
+        const acc = position.coords.accuracy || 10.0;
+
+        const liveCoords = {
+          latitude: lat,
+          longitude: lng,
+          altitude: alt,
+          accuracy: acc,
+          timestamp: position.timestamp || Date.now()
+        };
+
+        setCoords(liveCoords);
+        setGpsStatus('locked');
+
+        // Execute authoritative geofence validation
+        const validation = validateCoordinatesAgainstGeofence(lat, lng, acc);
+        setGeofenceResult(validation);
+
+        // Fetch reverse geocode address
+        try {
+          const geoRes = await reverseGeocode(lat, lng);
+          setLocationName(geoRes.locationName);
+        } catch (e) {
+          setLocationName(`${lat.toFixed(6)}° N, ${lng.toFixed(6)}° E`);
+        }
+      },
+      (error) => {
+        let errorMsg = 'Failed to acquire location.';
+        let status = 'error';
+
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMsg = 'Location access denied. Please allow GPS permissions in your browser settings to mark attendance.';
+            status = 'denied';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMsg = 'GPS satellite signal unavailable. Please ensure location services are enabled on your device.';
+            status = 'error';
+            break;
+          case error.TIMEOUT:
+            errorMsg = 'Location request timed out. Retrying satellite connection...';
+            status = 'timeout';
+            break;
+          default:
+            errorMsg = error.message || 'GPS acquisition failed.';
+            status = 'error';
+        }
+
+        console.warn('GPS Error:', status, errorMsg);
+        setGpsStatus(status);
+        setGpsErrorMsg(errorMsg);
+        setCoords(null);
+        setLocationName('GPS unavailable');
+        
+        const invalidValidation = validateCoordinatesAgainstGeofence(null, null, null);
+        setGeofenceResult(invalidValidation);
+      },
+      { 
+        enableHighAccuracy: true, 
+        timeout: 12000, 
+        maximumAge: 0 // STRICT: Never use cached coordinates
+      }
+    );
   }, []);
+
+  useEffect(() => {
+    acquireFreshLocation();
+  }, [acquireFreshLocation]);
 
   // 3. Start Camera Stream
   const startCamera = async (mode = facingMode) => {
@@ -188,6 +223,11 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
     const videoEl = videoRef.current;
     if (!videoEl && cameraState === 'streaming') return;
 
+    const lat = coords ? coords.latitude : null;
+    const lng = coords ? coords.longitude : null;
+    const alt = coords ? coords.altitude : 564.0;
+    const acc = coords ? coords.accuracy : null;
+
     // Burn GPS overlay directly onto image
     const stampedDataUrl = renderGpsMapCamCanvas({
       sourceImage: videoEl,
@@ -196,10 +236,10 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
       empId: teacherId,
       cadre: teacherCadre,
       department: teacherDept,
-      latitude: coords.latitude,
-      longitude: coords.longitude,
-      altitude: coords.altitude,
-      accuracy: coords.accuracy,
+      latitude: lat,
+      longitude: lng,
+      altitude: alt,
+      accuracy: acc,
       locationName: locationName,
       punchType: punchType,
       workMode: workMode,
@@ -224,6 +264,11 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
+        const lat = coords ? coords.latitude : null;
+        const lng = coords ? coords.longitude : null;
+        const alt = coords ? coords.altitude : 564.0;
+        const acc = coords ? coords.accuracy : null;
+
         const stampedDataUrl = renderGpsMapCamCanvas({
           sourceImage: img,
           isMirrored: false,
@@ -231,10 +276,10 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
           empId: teacherId,
           cadre: teacherCadre,
           department: teacherDept,
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-          altitude: coords.altitude,
-          accuracy: coords.accuracy,
+          latitude: lat,
+          longitude: lng,
+          altitude: alt,
+          accuracy: acc,
           locationName: locationName,
           punchType: punchType,
           workMode: workMode,
@@ -264,10 +309,10 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
         punchType: punchType,
         workMode: workMode,
         photoUrl: capturedPhotoUrl,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        altitude: coords.altitude,
-        accuracy: coords.accuracy,
+        latitude: coords ? coords.latitude : null,
+        longitude: coords ? coords.longitude : null,
+        altitude: coords ? coords.altitude : null,
+        accuracy: coords ? coords.accuracy : null,
         locationName: locationName,
         remarks: remarks || `Geo-attendance stamped via GPS Map Camera`
       });
@@ -281,7 +326,9 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
     }
   };
 
-  const formattedCoords = formatCoordinates(coords.latitude, coords.longitude);
+  const formattedCoords = coords 
+    ? formatCoordinates(coords.latitude, coords.longitude) 
+    : { latStr: '—', lngStr: '—', combined: 'Coordinates Pending' };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in">
@@ -295,20 +342,33 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
         {/* Modal Top Bar */}
         <div className="px-5 py-4 bg-gradient-to-r from-[#170E0C] via-[#24130F] to-[#2E1612] border-b border-[#E43D12]/30 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-purple-600/40 border border-purple-400/30 flex items-center justify-center text-purple-300">
-              <Camera className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-xl bg-[#E43D12]/20 border border-[#E43D12]/40 flex items-center justify-center text-[#FFA2B6]">
+              <Camera className="w-4 h-4 text-[#FFA2B6]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-extrabold text-white tracking-wide">
                   GPS MAP CAMERA &bull; ATTENDANCE PUNCH
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  LIVE GPS
-                </span>
+                {gpsStatus === 'locked' && geofenceResult?.isValid && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>CAMPUS VERIFIED</span>
+                  </span>
+                )}
+                {gpsStatus === 'locked' && !geofenceResult?.isValid && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    OUTSIDE CAMPUS
+                  </span>
+                )}
+                {gpsStatus === 'acquiring' && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">
+                    ACQUIRING GPS...
+                  </span>
+                )}
               </div>
-              <p className="text-[11px] text-purple-300">
-                {teacherName} &bull; <span className="font-mono text-yellow-300">{teacherId}</span>
+              <p className="text-[11px] text-[#FFA2B6]">
+                {teacherName} &bull; <span className="font-mono text-[#EFB11D]">{teacherId}</span>
               </p>
             </div>
           </div>
@@ -325,7 +385,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
         <div className="p-4 sm:p-5 space-y-4">
           
           {/* Controls Bar: Punch Mode & Duty Type */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-purple-950/40 p-3 rounded-2xl border border-purple-800/40">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#24130F] p-3 rounded-2xl border border-[#E43D12]/20">
             {/* Punch In / Out Toggle */}
             <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10">
               <button
@@ -356,11 +416,11 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
 
             {/* Duty Session Selector */}
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold text-purple-200 shrink-0">Work Mode:</span>
+              <span className="text-[11px] font-bold text-[#FFA2B6] shrink-0">Work Mode:</span>
               <select
                 value={workMode}
                 onChange={(e) => setWorkMode(e.target.value)}
-                className="flex-1 bg-black/40 border border-purple-500/30 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-purple-400"
+                className="flex-1 bg-black/40 border border-[#E43D12]/30 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#E43D12]"
               >
                 <option value="On Campus">Regular Campus Duty</option>
                 <option value="Lecture & Lab">Lecture & Lab Session</option>
@@ -372,7 +432,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
           </div>
 
           {/* Camera Viewfinder / Preview Container */}
-          <div className="relative aspect-[4/5] sm:aspect-[4/3] w-full max-h-[460px] bg-black rounded-2xl overflow-hidden border-2 border-purple-500/40 shadow-inner flex items-center justify-center">
+          <div className="relative aspect-[4/5] sm:aspect-[4/3] w-full max-h-[440px] bg-black rounded-2xl overflow-hidden border-2 border-[#E43D12]/40 shadow-inner flex items-center justify-center">
             
             {/* Case 1: Captured Stamped Photo Preview */}
             {cameraState === 'captured' && capturedPhotoUrl ? (
@@ -382,7 +442,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
                   alt="Captured GPS Map Cam Selfie"
                   className="w-full h-full object-contain"
                 />
-                <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-500/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1.5">
+                <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-500/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span>GPS Map Cam Stamp Burned Successfully</span>
                 </div>
@@ -402,7 +462,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
                 <div className="flex flex-col sm:flex-row gap-2.5 justify-center pt-2">
                   <button
                     onClick={() => startCamera(facingMode)}
-                    className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-[#E43D12] hover:bg-[#C7310B] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Retry Camera</span>
@@ -441,10 +501,10 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
                       Align Face in Oval
                     </span>
                     {/* Crosshair corners */}
-                    <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-yellow-400" />
-                    <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-yellow-400" />
-                    <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-yellow-400" />
-                    <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-yellow-400" />
+                    <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#EFB11D]" />
+                    <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#EFB11D]" />
+                    <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#EFB11D]" />
+                    <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#EFB11D]" />
                   </div>
                 </div>
 
@@ -452,31 +512,67 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
                 <div className="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none">
                   <div className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center gap-2 text-xs">
                     <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                    <span className="font-mono font-bold text-white">REC</span>
+                    <span className="font-mono font-bold text-white">LIVE</span>
                     <span className="text-slate-300 font-mono text-[11px]">
                       {currentTime.toLocaleTimeString()}
                     </span>
                   </div>
 
-                  <div className="px-3 py-1 rounded-full bg-purple-900/80 backdrop-blur-md border border-purple-400/40 text-yellow-300 font-extrabold text-[11px] tracking-wider">
-                    GPS MAP CAM ACTIVE
-                  </div>
+                  {/* Geofence Status Pill on Top Right of Camera Viewfinder */}
+                  {gpsStatus === 'acquiring' ? (
+                    <div className="px-3 py-1 rounded-full bg-amber-950/80 backdrop-blur-md border border-amber-500/40 text-amber-300 font-extrabold text-[11px] flex items-center gap-1.5">
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      <span>Locking GPS...</span>
+                    </div>
+                  ) : geofenceResult?.isValid ? (
+                    <div className="px-3 py-1 rounded-full bg-emerald-950/80 backdrop-blur-md border border-emerald-500/40 text-emerald-300 font-extrabold text-[11px] flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      <span>Inside Campus ({geofenceResult.distanceMeters}m)</span>
+                    </div>
+                  ) : geofenceResult?.status === 'OUTSIDE_CAMPUS' ? (
+                    <div className="px-3 py-1 rounded-full bg-rose-950/80 backdrop-blur-md border border-rose-500/40 text-rose-300 font-extrabold text-[11px] flex items-center gap-1.5">
+                      <AlertOctagon className="w-3 h-3 text-rose-400" />
+                      <span>Outside Campus ({geofenceResult.distanceMeters >= 1000 ? `${(geofenceResult.distanceMeters / 1000).toFixed(2)}km` : `${geofenceResult.distanceMeters}m`})</span>
+                    </div>
+                  ) : geofenceResult?.status === 'UNCERTAIN_ACCURACY' ? (
+                    <div className="px-3 py-1 rounded-full bg-amber-950/80 backdrop-blur-md border border-amber-500/40 text-amber-300 font-extrabold text-[11px] flex items-center gap-1.5">
+                      <AlertTriangle className="w-3 h-3 text-amber-400" />
+                      <span>GPS Low Precision (&plusmn;{geofenceResult.accuracyMeters}m)</span>
+                    </div>
+                  ) : (
+                    <div className="px-3 py-1 rounded-full bg-rose-950/80 backdrop-blur-md border border-rose-500/40 text-rose-300 font-extrabold text-[11px] flex items-center gap-1.5">
+                      <AlertTriangle className="w-3 h-3 text-rose-400" />
+                      <span>GPS Denied / Unavailable</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bottom Live HUD Preview inside Camera */}
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/80 to-transparent p-3 pt-8 text-[11px] font-sans pointer-events-none space-y-1">
-                  <div className="flex items-center justify-between text-yellow-300 font-extrabold">
-                    <div className="flex items-center gap-1 truncate max-w-[80%]">
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/85 to-transparent p-3 pt-8 text-[11px] font-sans pointer-events-none space-y-1">
+                  <div className="flex items-center justify-between font-extrabold">
+                    <div className="flex items-center gap-1 truncate max-w-[70%] text-[#EFB11D]">
                       <MapPin className="w-3.5 h-3.5 shrink-0 text-red-400" />
                       <span className="truncate">{locationName}</span>
                     </div>
-                    <span className="text-[10px] text-emerald-400 font-mono">
-                      ✓ Geofenced
-                    </span>
+                    {geofenceResult?.isValid ? (
+                      <span className="text-[10px] text-emerald-400 font-mono">
+                        &bull; Perimeter OK ({geofenceResult.distanceMeters}m)
+                      </span>
+                    ) : geofenceResult?.status === 'OUTSIDE_CAMPUS' ? (
+                      <span className="text-[10px] text-rose-400 font-mono font-bold">
+                        &bull; Outside Perimeter ({geofenceResult.distanceMeters}m)
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-amber-400 font-mono">
+                        &bull; Telemetry Pending
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between font-mono text-[10px] text-slate-300">
                     <span>Lat: {formattedCoords.latStr} | Long: {formattedCoords.lngStr}</span>
-                    <span className="text-cyan-300">Alt: {coords.altitude.toFixed(1)}m ASL</span>
+                    <span className="text-cyan-300">
+                      Alt: {coords ? `${coords.altitude.toFixed(1)}m ASL` : '—'} &bull; Prec: &plusmn;{coords?.accuracy ? coords.accuracy.toFixed(1) : '—'}m
+                    </span>
                   </div>
                 </div>
               </>
@@ -484,40 +580,79 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
           </div>
 
           {/* Location & GPS Telemetry Card */}
-          <div className="bg-purple-950/30 rounded-2xl p-3 border border-purple-800/30 space-y-2 text-xs">
-            <div className="flex items-center justify-between border-b border-purple-800/40 pb-2">
+          <div className="bg-[#24130F] rounded-2xl p-3 border border-[#E43D12]/20 space-y-2.5 text-xs">
+            <div className="flex items-center justify-between border-b border-[#E43D12]/30 pb-2">
               <div className="flex items-center gap-2">
-                <Navigation className="w-3.5 h-3.5 text-purple-400" />
+                <Navigation className="w-3.5 h-3.5 text-[#E43D12]" />
                 <span className="font-extrabold text-white text-[11px] uppercase tracking-wide">
-                  GPS Location & Map Cam Telemetry
+                  GPS Telemetry & Campus Geofence Engine
                 </span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-900/60 text-purple-200 border border-purple-700/50">
-                Precision: &plusmn;{coords.accuracy.toFixed(1)}m
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={acquireFreshLocation}
+                  disabled={gpsStatus === 'acquiring'}
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[#FFA2B6] hover:text-white border border-white/15 text-[10px] font-bold transition-all flex items-center gap-1"
+                >
+                  <RefreshCw className={`w-3 h-3 ${gpsStatus === 'acquiring' ? 'animate-spin' : ''}`} />
+                  <span>Refresh GPS</span>
+                </button>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-black/40 text-[#FFA2B6] border border-[#FFA2B6]/30">
+                  Precision: &plusmn;{coords?.accuracy ? coords.accuracy.toFixed(1) : '—'}m
+                </span>
+              </div>
             </div>
 
+            {/* Live GPS Warning / Verification Alert Box */}
+            {geofenceResult && (
+              <div className={`p-2.5 rounded-xl border flex items-start gap-2 text-[11px] ${
+                geofenceResult.isValid
+                  ? 'bg-emerald-950/50 border-emerald-500/40 text-emerald-200'
+                  : geofenceResult.status === 'OUTSIDE_CAMPUS'
+                  ? 'bg-rose-950/50 border-rose-500/40 text-rose-200'
+                  : 'bg-amber-950/50 border-amber-500/40 text-amber-200'
+              }`}>
+                {geofenceResult.isValid ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertOctagon className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <span className="font-extrabold block text-white">
+                    {geofenceResult.badgeText}
+                  </span>
+                  <p className="opacity-90">{geofenceResult.message}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Telemetry Numbers Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-              <div className="p-2 rounded-xl bg-black/30 border border-white/5">
+              <div className="p-2 rounded-xl bg-black/40 border border-white/5">
                 <span className="text-[10px] text-slate-400 block font-bold uppercase">Latitude</span>
-                <span className="font-mono font-bold text-purple-200">{formattedCoords.latStr}</span>
+                <span className="font-mono font-bold text-white">{formattedCoords.latStr}</span>
               </div>
-              <div className="p-2 rounded-xl bg-black/30 border border-white/5">
+              <div className="p-2 rounded-xl bg-black/40 border border-white/5">
                 <span className="text-[10px] text-slate-400 block font-bold uppercase">Longitude</span>
-                <span className="font-mono font-bold text-purple-200">{formattedCoords.lngStr}</span>
+                <span className="font-mono font-bold text-white">{formattedCoords.lngStr}</span>
               </div>
-              <div className="p-2 rounded-xl bg-black/30 border border-white/5">
-                <span className="text-[10px] text-slate-400 block font-bold uppercase">Altitude (ASL)</span>
-                <span className="font-mono font-bold text-cyan-300">{coords.altitude.toFixed(1)} meters</span>
+              <div className="p-2 rounded-xl bg-black/40 border border-white/5">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase">Distance from Center</span>
+                <span className={`font-mono font-bold ${geofenceResult?.isInsideCampus ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {geofenceResult?.distanceMeters != null ? `${geofenceResult.distanceMeters}m (Max: 850m)` : '—'}
+                </span>
               </div>
-              <div className="p-2 rounded-xl bg-black/30 border border-white/5">
-                <span className="text-[10px] text-slate-400 block font-bold uppercase">Campus Zone</span>
-                <span className="font-bold text-emerald-400 truncate block">Rajbaug Campus</span>
+              <div className="p-2 rounded-xl bg-black/40 border border-white/5">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase">Verification Status</span>
+                <span className={`font-bold truncate block ${geofenceResult?.isValid ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {geofenceResult?.badgeText || 'Awaiting GPS Lock'}
+                </span>
               </div>
             </div>
 
             <p className="text-[11px] text-slate-300 truncate">
-              <strong className="text-yellow-300">Address:</strong> {locationName}
+              <strong className="text-[#EFB11D]">Address:</strong> {locationName}
             </p>
           </div>
 
@@ -538,7 +673,11 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
                   type="button"
                   disabled={isSubmitting}
                   onClick={handleSubmitAttendance}
-                  className="flex-1 py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-extrabold shadow-lg shadow-emerald-900/30 transition-all flex items-center justify-center gap-2"
+                  className={`flex-1 py-3 px-6 rounded-2xl text-white text-sm font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 ${
+                    geofenceResult?.isValid
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-900/30'
+                      : 'bg-gradient-to-r from-[#E43D12] to-orange-600 hover:from-[#C7310B] hover:to-orange-500 shadow-orange-950/40'
+                  }`}
                 >
                   {isSubmitting ? (
                     <>
@@ -548,7 +687,10 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Confirm & Mark {punchType === 'IN' ? 'Punch In' : 'Punch Out'}</span>
+                      <span>
+                        Confirm & Mark {punchType === 'IN' ? 'Punch In' : 'Punch Out'}
+                        {!geofenceResult?.isValid && ' (Outside Campus)'}
+                      </span>
                     </>
                   )}
                 </button>
@@ -560,7 +702,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
                   type="button"
                   onClick={toggleCamera}
                   title="Switch camera"
-                  className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-purple-200 hover:text-white border border-white/15 transition-all flex items-center gap-1.5 text-xs font-bold"
+                  className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-[#FFA2B6] hover:text-white border border-white/15 transition-all flex items-center gap-1.5 text-xs font-bold"
                 >
                   <RefreshCw className="w-4 h-4" />
                   <span className="hidden sm:inline">Flip Camera</span>
@@ -571,7 +713,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   title="Upload image"
-                  className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-purple-200 hover:text-white border border-white/15 transition-all flex items-center gap-1.5 text-xs font-bold"
+                  className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-[#FFA2B6] hover:text-white border border-white/15 transition-all flex items-center gap-1.5 text-xs font-bold"
                 >
                   <Upload className="w-4 h-4" />
                   <span className="hidden sm:inline">Upload Photo</span>
@@ -600,10 +742,10 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
         </div>
 
         {/* Footer Guarantee */}
-        <div className="px-5 py-2.5 bg-black/60 border-t border-purple-900/50 flex items-center justify-between text-[10px] text-purple-300">
+        <div className="px-5 py-2.5 bg-black/70 border-t border-[#E43D12]/30 flex items-center justify-between text-[10px] text-[#FFA2B6]">
           <span className="flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Tamper-evident Digital Watermarking &bull; MIT-ADT Rajbaug Campus Geofence</span>
+            <span>Digital Cryptographic Stamp &bull; MIT-ADT Rajbaug Campus Geofence Perimeter</span>
           </span>
           <span className="font-mono text-slate-400">
             {currentTime.toLocaleDateString()}

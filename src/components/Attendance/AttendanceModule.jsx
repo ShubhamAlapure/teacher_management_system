@@ -32,6 +32,7 @@ import {
 import { GpsMapCamera } from './GpsMapCamera';
 import { AttendanceDetailModal } from './AttendanceDetailModal';
 import { formatCoordinates } from '../../utils/gpsMapCam';
+import { validateCoordinatesAgainstGeofence } from '../../utils/geofenceConfig';
 
 export const AttendanceModule = () => {
   const { 
@@ -159,6 +160,10 @@ export const AttendanceModule = () => {
         status = 'Attendance Not Marked';
       }
 
+      const geoVal = punchRecord 
+        ? validateCoordinatesAgainstGeofence(punchRecord.latitude, punchRecord.longitude, punchRecord.accuracy)
+        : null;
+
       return {
         teacher,
         punchRecord: punchRecord || null,
@@ -178,7 +183,9 @@ export const AttendanceModule = () => {
         longitude: punchRecord?.longitude || null,
         altitude: punchRecord?.altitude || null,
         selfie_url: punchRecord?.selfie_url || null,
-        geofence_status: punchRecord?.geofence_status || (punchRecord ? 'Campus Perimeter Verified' : (approvedLeave ? 'Leave Sanctioned' : 'Pending Verification')),
+        is_geofence_verified: punchRecord ? (punchRecord.is_geofence_verified ?? geoVal?.isValid) : false,
+        distance_from_campus: punchRecord ? (punchRecord.distance_from_campus ?? geoVal?.distanceMeters) : null,
+        geofence_status: punchRecord?.geofence_status || (geoVal ? geoVal.badgeText : (approvedLeave ? 'Leave Sanctioned' : 'Pending Verification')),
         remarks: punchRecord?.remarks || (approvedLeave ? `Leave: ${approvedLeave.reason || 'Approved'}` : '')
       };
     });
@@ -251,13 +258,16 @@ export const AttendanceModule = () => {
         (a.emp_id === t.emp_id || a.teacher_id === t.id) && a.date === selectedDate
       );
       const onLeave = !punch ? getApprovedLeave(t, selectedDate) : null;
+      const geoVal = punch 
+        ? validateCoordinatesAgainstGeofence(punch.latitude, punch.longitude, punch.accuracy)
+        : null;
 
       if (punch) {
         presentCount++;
         if (punch.status?.includes('Late') || punch.is_late) lateCount++;
         if (punch.status?.includes('Early Left') || punch.is_early_left) earlyLeftCount++;
         if (punch.status === 'On Duty' || punch.work_mode?.includes('Duty')) onDutyCount++;
-        if (punch.geofence_status?.includes('Verified') || punch.latitude) geoVerifiedCount++;
+        if (punch.is_geofence_verified || geoVal?.isValid) geoVerifiedCount++;
       } else if (onLeave) {
         onLeaveCount++;
       } else if (selectedDate < todayStr) {
@@ -577,11 +587,28 @@ export const AttendanceModule = () => {
                       <span className="text-[10px] font-bold text-[#5A524D] uppercase">Registered Location</span>
                       <p className="font-medium text-[#1A1412]">{myTodayRecord.location_name}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 shrink-0">
-                        ✓ Campus Geofence Match
-                      </span>
-                    </div>
+                    {(() => {
+                      const todayGeo = validateCoordinatesAgainstGeofence(
+                        myTodayRecord.latitude,
+                        myTodayRecord.longitude,
+                        myTodayRecord.accuracy
+                      );
+                      return (
+                        <div className="flex items-center gap-2">
+                          {todayGeo.isValid ? (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0 flex items-center gap-1">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>✓ Campus Perimeter Verified ({todayGeo.distanceMeters}m from center)</span>
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 shrink-0 flex items-center gap-1">
+                              <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                              <span>✗ Outside Campus Boundary ({todayGeo.distanceMeters >= 1000 ? `${(todayGeo.distanceMeters / 1000).toFixed(2)}km` : `${todayGeo.distanceMeters}m`} away)</span>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -658,6 +685,14 @@ export const AttendanceModule = () => {
                             <span className="text-[10px] font-mono text-cyan-700 block">
                               {c.latStr}, {c.lngStr} &bull; {log.altitude ? `${log.altitude.toFixed(0)}m` : '564m'}
                             </span>
+                            {(() => {
+                              const g = validateCoordinatesAgainstGeofence(log.latitude, log.longitude, log.accuracy);
+                              return (
+                                <span className={`text-[10px] font-bold block mt-0.5 ${g.isValid ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                  {g.isValid ? `✓ Perimeter OK (${g.distanceMeters}m)` : `✗ Outside Campus (${g.distanceMeters != null ? (g.distanceMeters >= 1000 ? `${(g.distanceMeters / 1000).toFixed(1)}km` : `${g.distanceMeters}m`) : 'No GPS'})`}
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="py-3 px-3">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
@@ -1042,10 +1077,17 @@ export const AttendanceModule = () => {
                           {/* Geofence */}
                           <td className="py-3 px-3 whitespace-nowrap">
                             {punch ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1 w-fit">
-                                <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                                <span>Verified</span>
-                              </span>
+                              row.is_geofence_verified ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 w-fit">
+                                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                  <span>Verified {row.distance_from_campus != null ? `(${row.distance_from_campus}m)` : ''}</span>
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1 w-fit">
+                                  <AlertTriangle className="w-3 h-3 text-rose-600" />
+                                  <span>Outside {row.distance_from_campus != null ? (row.distance_from_campus >= 1000 ? `(${(row.distance_from_campus / 1000).toFixed(1)}km)` : `(${row.distance_from_campus}m)`) : ''}</span>
+                                </span>
+                              )
                             ) : row.isOnLeave ? (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 flex items-center gap-1 w-fit">
                                 <FileCheck className="w-3 h-3 text-purple-600" />

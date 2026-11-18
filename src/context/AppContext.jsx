@@ -15,6 +15,7 @@ import {
   INITIAL_ATTENDANCE,
   DISTRICT_STATS
 } from '../lib/initialData';
+import { validateCoordinatesAgainstGeofence } from '../utils/geofenceConfig';
 
 // Safe Local Date Formatter (prevents UTC timezone date-shift bugs)
 export const getLocalDateStr = (d = new Date()) => {
@@ -934,6 +935,18 @@ export const AppProvider = ({ children }) => {
     const isLateArrival = (hours > 9) || (hours === 9 && minutes > 0);
     const isEarlyDeparture = (hours < 15) || (hours === 15 && minutes < 30);
 
+    // Perform live geofence validation on captured coordinates
+    const geoValidation = validateCoordinatesAgainstGeofence(
+      punchData.latitude,
+      punchData.longitude,
+      punchData.accuracy
+    );
+
+    const isInsideCampus = geoValidation.isInsideCampus;
+    const isGeofenceVerified = geoValidation.isValid;
+    const geofenceStatus = punchData.geofence_status || geoValidation.badgeText;
+    const distanceFromCampus = geoValidation.distanceMeters;
+
     let initialStatus = 'Present';
     if (punchType === 'IN') {
       if (isLateArrival) {
@@ -941,6 +954,9 @@ export const AppProvider = ({ children }) => {
       }
       if (punchData.workMode?.includes('Field') || punchData.workMode?.includes('Duty')) {
         initialStatus = 'On Duty';
+      } else if (!isInsideCampus && !isGeofenceVerified) {
+        // Explicitly flag outside campus attendance
+        initialStatus = 'Present (Outside Campus)';
       }
     }
 
@@ -984,7 +1000,10 @@ export const AppProvider = ({ children }) => {
           punch_out_lat: punchData.latitude,
           punch_out_lng: punchData.longitude,
           punch_out_alt: punchData.altitude,
+          punch_out_accuracy: punchData.accuracy,
+          punch_out_distance: distanceFromCampus,
           punch_out_location: punchData.locationName,
+          punch_out_geofence: geofenceStatus,
           work_mode: punchData.workMode || existing.work_mode,
           remarks: punchData.remarks || (isEarlyDeparture ? 'Early departure before 03:30 PM' : existing.remarks)
         };
@@ -994,12 +1013,16 @@ export const AppProvider = ({ children }) => {
           ...existing,
           punch_in_time: timeStr,
           punch_type: 'IN',
-          status: isLateArrival ? 'Late' : 'Present',
+          status: isLateArrival ? 'Late' : (isInsideCampus ? 'Present' : 'Present (Outside Campus)'),
           is_late: isLateArrival,
           selfie_url: punchData.photoUrl || existing.selfie_url,
-          latitude: punchData.latitude || existing.latitude,
-          longitude: punchData.longitude || existing.longitude,
+          latitude: punchData.latitude !== undefined ? punchData.latitude : existing.latitude,
+          longitude: punchData.longitude !== undefined ? punchData.longitude : existing.longitude,
           altitude: punchData.altitude || existing.altitude,
+          accuracy: punchData.accuracy !== undefined ? punchData.accuracy : existing.accuracy,
+          distance_from_campus: distanceFromCampus,
+          is_geofence_verified: isGeofenceVerified,
+          geofence_status: geofenceStatus,
           location_name: punchData.locationName || existing.location_name,
           work_mode: punchData.workMode || existing.work_mode
         };
@@ -1020,15 +1043,19 @@ export const AppProvider = ({ children }) => {
         status: initialStatus,
         is_late: isLateArrival,
         is_early_left: false,
-        work_mode: punchData.workMode || 'On Campus',
-        latitude: punchData.latitude || 18.490218,
-        longitude: punchData.longitude || 74.025412,
-        altitude: punchData.altitude || 564.2,
-        accuracy: punchData.accuracy || 4.0,
-        location_name: punchData.locationName || 'MIT-ADT University, Rajbaug Campus, Pune',
-        geofence_status: 'Campus Perimeter Verified',
+        work_mode: punchData.workMode || (isInsideCampus ? 'On Campus' : 'Outside Campus'),
+        latitude: punchData.latitude !== undefined ? punchData.latitude : null,
+        longitude: punchData.longitude !== undefined ? punchData.longitude : null,
+        altitude: punchData.altitude || 564.0,
+        accuracy: punchData.accuracy !== undefined ? punchData.accuracy : null,
+        distance_from_campus: distanceFromCampus,
+        is_geofence_verified: isGeofenceVerified,
+        location_name: punchData.locationName || (isInsideCampus ? 'MIT-ADT University, Rajbaug Campus, Pune' : 'Outside Campus Location'),
+        geofence_status: geofenceStatus,
         selfie_url: punchData.photoUrl,
-        remarks: isLateArrival ? 'Late punch in after 09:00 AM' : 'On-time arrival within 08:45 - 09:00 AM'
+        remarks: punchData.remarks || (isGeofenceVerified 
+          ? (isLateArrival ? 'Late punch in after 09:00 AM' : 'On-time arrival within 08:45 - 09:00 AM')
+          : `Recorded outside campus: ${distanceFromCampus || 0}m from center.`)
       };
       updatedAttendanceList = [recordToSave, ...updatedAttendanceList];
     }
@@ -1118,10 +1145,12 @@ export const AppProvider = ({ children }) => {
         is_late: newStatus === 'Late',
         is_early_left: false,
         work_mode: target.work_mode || 'Regularized by HOD/Admin',
-        latitude: 18.490218,
-        longitude: 74.025412,
-        altitude: 564.2,
-        accuracy: 4.0,
+        latitude: target.latitude || 18.492590,
+        longitude: target.longitude || 74.025480,
+        altitude: target.altitude || 564.0,
+        accuracy: target.accuracy || 3.5,
+        distance_from_campus: 0,
+        is_geofence_verified: true,
         location_name: 'MIT-ADT University, Rajbaug Campus (HOD Regularized)',
         geofence_status: 'HOD Regularized & Verified',
         selfie_url: target.selfie_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
