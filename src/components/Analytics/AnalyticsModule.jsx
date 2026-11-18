@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Download, 
   Users, 
   Building2, 
-  Calendar
+  Calendar,
+  Sparkles,
+  RefreshCw,
+  Zap,
+  CheckCircle2
 } from 'lucide-react';
+import { generateAnalyticsExecutiveSummary } from '../../services/groqService';
 import { 
   XAxis, 
   YAxis, 
@@ -18,6 +23,35 @@ import {
 
 export const AnalyticsModule = () => {
   const { districtStats, pushNotification } = useApp();
+
+  const [aiSummary, setAiSummary] = useState(null);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+
+  const handleGenerateAiSummary = async () => {
+    setIsGeneratingAi(true);
+    try {
+      const totalTeachers = (districtStats || []).reduce((sum, d) => sum + (d.total_teachers || 0), 0);
+      const totalVacancies = (districtStats || []).reduce((sum, d) => sum + (d.vacancies || 0), 0);
+      const deptNames = (districtStats || []).map(d => d.name).join(', ');
+
+      const res = await generateAnalyticsExecutiveSummary({
+        totalFaculty: totalTeachers,
+        openVacancies: totalVacancies,
+        activeDepartments: deptNames,
+        attendanceRate: 91,
+        geoVerifiedCount: 22,
+        lateCount: 2
+      });
+
+      setAiSummary(res.content);
+      pushNotification('Groq AI Brief Ready', 'Institutional intelligence summary generated via Groq.', 'success');
+    } catch (err) {
+      console.error('Groq AI summary error:', err);
+      pushNotification('Groq Error', err.message || 'Unable to generate summary.', 'error');
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
 
   const retirementData = [
     { year: '2026', count: 420 },
@@ -67,6 +101,73 @@ export const AnalyticsModule = () => {
           <Download className="w-4 h-4" />
           Export University CSV Report
         </button>
+      </div>
+
+      {/* Groq AI Institutional Executive Intelligence Brief */}
+      <div className="bg-[#18110E] text-white p-6 rounded-3xl border border-[#E43D12]/40 shadow-xl space-y-3 relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E43D12]/30 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#E43D12] to-[#EFB11D] flex items-center justify-center text-white shadow-md">
+              <Zap className="w-4 h-4 fill-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-extrabold tracking-wide text-white">
+                  GROQ AI &bull; EXECUTIVE INSTITUTIONAL INTELLIGENCE BRIEF
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  ONLINE
+                </span>
+              </div>
+              <p className="text-[11px] text-[#FFA2B6]">
+                Instant LLM synthesis of faculty strength, department PTR, and attendance trends.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGenerateAiSummary}
+            disabled={isGeneratingAi}
+            className="px-4 py-2 rounded-xl bg-[#E43D12] hover:bg-[#C7310B] disabled:opacity-60 text-white text-xs font-black shadow-md transition-all flex items-center gap-2 self-start sm:self-auto"
+          >
+            {isGeneratingAi ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Synthesizing with Groq...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5 text-[#EFB11D]" />
+                <span>{aiSummary ? 'Refresh AI Brief' : 'Generate Executive Brief'}</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {aiSummary ? (
+          <div className="bg-[#24130F] p-4 rounded-2xl border border-[#E43D12]/20 space-y-2 text-xs leading-relaxed text-[#FAF9F5]">
+            <div className="flex items-center justify-between text-[10px] text-[#FFA2B6] border-b border-white/10 pb-1.5 font-mono">
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Model: openai/gpt-oss-120b &bull; Low Latency LPU Inference</span>
+              </span>
+              <span>Updated Just Now</span>
+            </div>
+            <div className="whitespace-pre-line text-xs text-slate-200 pt-1">
+              {aiSummary}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-[#24130F]/60 p-4 rounded-2xl border border-white/5 text-xs text-slate-300 flex items-center justify-between">
+            <p>
+              Click <strong>"Generate Executive Brief"</strong> to run high-speed institutional analysis across all engineering branches using the Groq AI engine.
+            </p>
+            <span className="text-[10px] text-[#EFB11D] font-mono font-bold shrink-0 ml-3">
+              ~0.2s Inference
+            </span>
+          </div>
+        )}
       </div>
 
       {/* PTR Grid */}

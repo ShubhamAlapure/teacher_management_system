@@ -17,6 +17,7 @@ import { AttendanceModule } from './components/Attendance/AttendanceModule';
 import { NotificationsModal } from './components/NotificationsModal';
 import { SupabaseConfigModal } from './components/SupabaseConfigModal';
 import { ShortlistProfileModal } from './components/ShortlistProfileModal';
+import { GroqAssistantModal } from './components/AI/GroqAssistantModal';
 
 const MainContent = () => {
   const { activeTab } = useApp();
@@ -82,6 +83,7 @@ const AppShell = () => {
       <NotificationsModal />
       <SupabaseConfigModal />
       <ShortlistProfileModal />
+      <GroqAssistantModal />
     </div>
   );
 };

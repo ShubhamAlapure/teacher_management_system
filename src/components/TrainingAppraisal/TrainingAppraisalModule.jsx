@@ -13,8 +13,11 @@ import {
   Clock,
   GraduationCap,
   BarChart3,
-  FileCheck
+  FileCheck,
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
+import { generateAparAppraisalRemarks } from '../../services/groqService';
 
 export const TrainingAppraisalModule = () => {
   const { 
@@ -38,6 +41,30 @@ export const TrainingAppraisalModule = () => {
 
   const [aparForm, setAparForm] = useState({ self_score: 90, teacher_remarks: '' });
   const [reviewForm, setReviewForm] = useState({ principal_score: 90, deo_score: 90, remarks: '' });
+
+  const [isAiDrafting, setIsAiDrafting] = useState(false);
+
+  const handleAiDraftRemarks = async () => {
+    if (!selectedAparForReview) return;
+    setIsAiDrafting(true);
+    try {
+      const res = await generateAparAppraisalRemarks({
+        facultyName: selectedAparForReview.teacher_name,
+        cadre: selectedAparForReview.cadre || 'Assistant Professor',
+        department: selectedAparForReview.department || 'School of Engineering',
+        selfScore: selectedAparForReview.self_appraisal_score || 90,
+        achievements: selectedAparForReview.teacher_remarks || ''
+      });
+      setReviewForm(prev => ({
+        ...prev,
+        remarks: res.content
+      }));
+    } catch (err) {
+      console.error('Groq APAR draft error:', err);
+    } finally {
+      setIsAiDrafting(false);
+    }
+  };
 
   const handleAparSubmit = (e) => {
     e.preventDefault();
@@ -297,14 +324,29 @@ export const TrainingAppraisalModule = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Evaluation Remarks / Feedback</label>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">Evaluation Remarks / Feedback</label>
+                    <button
+                      type="button"
+                      onClick={handleAiDraftRemarks}
+                      disabled={isAiDrafting}
+                      className="px-2 py-0.5 rounded-lg bg-[#E43D12]/10 hover:bg-[#E43D12]/20 text-[#E43D12] border border-[#FFA2B6] text-[10px] font-bold flex items-center gap-1 transition-all"
+                    >
+                      {isAiDrafting ? (
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-3 h-3 text-[#E43D12]" />
+                      )}
+                      <span>{isAiDrafting ? 'Drafting...' : 'AI Draft Remarks (Groq)'}</span>
+                    </button>
+                  </div>
                   <textarea
-                    rows={3} required
-                    placeholder="Enter your evaluation remarks for this faculty member..."
+                    rows={4} required
+                    placeholder="Enter evaluation remarks or click 'AI Draft Remarks' above..."
                     value={reviewForm.remarks}
                     onChange={(e) => setReviewForm({ ...reviewForm, remarks: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900"
+                    className="w-full px-3 py-2 rounded-xl border border-purple-200 text-xs text-slate-900 leading-relaxed"
                   />
                 </div>
 
