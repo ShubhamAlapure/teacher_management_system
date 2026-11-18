@@ -16,6 +16,16 @@ import {
   DISTRICT_STATS
 } from '../lib/initialData';
 
+// Safe Local Date Formatter (prevents UTC timezone date-shift bugs)
+export const getLocalDateStr = (d = new Date()) => {
+  const dateObj = typeof d === 'string' ? new Date(d) : d;
+  if (isNaN(dateObj.getTime())) return new Date().toISOString().split('T')[0];
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
@@ -241,15 +251,19 @@ export const AppProvider = ({ children }) => {
         qualification: 'Master Admin Access & Executive Authority'
       }
     : role === 'principal'
-      ? teachers.find(t => t.cadre && (t.cadre.includes('Dean') || t.cadre.includes('Principal'))) || {
-          id: 'dean-01',
-          emp_id: 'MIT-DEAN-2012-0056',
-          full_name: 'Dr. Rajesh Kumar',
-          email: 'dean.soe@mituniversity.edu.in',
-          cadre: 'School Dean',
-          current_school: 'School of Engineering & Technology (SOE)',
-          service_status: 'Active'
-        }
+      ? ((currentUser?.emp_id && teachers.find(t => t.emp_id?.trim().toLowerCase() === currentUser.emp_id.trim().toLowerCase()))
+          || (resolvedEmail && teachers.find(t => t.email?.toLowerCase() === resolvedEmail.toLowerCase()))
+          || teachers.find(t => t.cadre && (t.cadre.includes('HOD') || t.cadre.includes('Dean') || t.cadre.includes('Principal')))
+          || {
+              id: 'dean-01',
+              emp_id: 'MIT-DEAN-2012-0056',
+              full_name: 'Dr. Rajesh Kumar',
+              email: 'dean.soe@mituniversity.edu.in',
+              cadre: 'School Dean',
+              department: 'School of Engineering & Technology (SOE)',
+              current_school: 'School of Engineering & Technology (SOE)',
+              service_status: 'Active'
+            })
       : role === 'applicant'
         // For applicant/candidate, ALWAYS use currentUser data
         ? {
@@ -581,12 +595,17 @@ export const AppProvider = ({ children }) => {
       || activeTeacher.full_name
       || 'Faculty Member';
     const teacherId = activeTeacher.id || resolvedTeacher?.id || currentUser?.emp_id;
+    const teacherEmpId = currentUser?.emp_id || resolvedTeacher?.emp_id || activeTeacher?.emp_id;
+    const teacherDept = activeTeacher?.department || resolvedTeacher?.department || 'Computer Science & Engineering (CSE)';
+
     const newLeave = {
       id: `lv-${Date.now()}`,
       teacher_id: teacherId,
+      emp_id: teacherEmpId,
       teacher_name: teacherName,
+      department: teacherDept,
       status: 'Pending',
-      created_at: new Date().toISOString().split('T')[0],
+      created_at: getLocalDateStr(),
       ...leaveData
     };
 
@@ -896,14 +915,14 @@ export const AppProvider = ({ children }) => {
   // 12. Mark Attendance with GPS Map Cam Selfie
   const markAttendance = async (punchData) => {
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = getLocalDateStr(now);
     const timeStr = now.toTimeString().split(' ')[0]; // '09:15:30'
 
     const teacherEmpId = currentUser?.emp_id || activeTeacher?.emp_id || 'MIT-FAC-001';
     const teacherName = currentUser?.full_name || activeTeacher?.full_name || 'Faculty Member';
     const teacherId = currentUser?.id || activeTeacher?.id || 'tch-01';
     const teacherCadre = activeTeacher?.cadre || 'Assistant Professor';
-    const teacherDept = activeTeacher?.department || activeTeacher?.current_school || 'School of Engineering (SOE)';
+    const teacherDept = activeTeacher?.department || activeTeacher?.current_school || 'Computer Science & Engineering (CSE)';
 
     const punchType = (punchData.punchType || 'IN').toUpperCase();
     const hours = now.getHours();
@@ -1056,18 +1075,94 @@ export const AppProvider = ({ children }) => {
   };
 
   // 13. Regularize Attendance (HOD / Dean / Admin)
-  const regularizeAttendance = async (attId, newStatus, remarks = '') => {
-    setAttendance(prev => prev.map(a => a.id === attId ? { ...a, status: newStatus, approver_remarks: remarks } : a));
+  const regularizeAttendance = async (target, newStatus, remarks = '') => {
+    const isTargetObject = typeof target === 'object' && target !== null;
+    const targetId = isTargetObject ? target.id : target;
+    const targetEmpId = isTargetObject ? target.emp_id : null;
+    const targetDate = isTargetObject ? (target.date || getLocalDateStr()) : getLocalDateStr();
 
-    if (isSupabaseConfigured && supabase) {
+    let recordFound = false;
+    let savedRecord = null;
+
+    let updatedAttendance = attendance.map(a => {
+      const match = (targetId && a.id === targetId) || (targetEmpId && a.emp_id === targetEmpId && a.date === targetDate);
+      if (match) {
+        recordFound = true;
+        savedRecord = {
+          ...a,
+          status: newStatus,
+          approver_remarks: remarks,
+          remarks: remarks || a.remarks,
+          is_late: newStatus === 'Late',
+          is_early_left: newStatus.includes('Early Left')
+        };
+        return savedRecord;
+      }
+      return a;
+    });
+
+    if (!recordFound && isTargetObject) {
+      // Create new attendance punch record for this faculty and date
+      savedRecord = {
+        id: targetId || `att-reg-${Date.now()}`,
+        teacher_id: target.teacher_id || target.id || 'tch-reg',
+        emp_id: target.emp_id,
+        teacher_name: target.full_name || target.teacher_name || 'Faculty Member',
+        cadre: target.cadre || 'Assistant Professor',
+        department: target.department || 'Computer Science & Engineering (CSE)',
+        date: targetDate,
+        punch_in_time: target.punch_in_time || '08:50:00',
+        punch_out_time: target.punch_out_time || '15:35:00',
+        punch_type: 'IN',
+        status: newStatus,
+        is_late: newStatus === 'Late',
+        is_early_left: false,
+        work_mode: target.work_mode || 'Regularized by HOD/Admin',
+        latitude: 18.490218,
+        longitude: 74.025412,
+        altitude: 564.2,
+        accuracy: 4.0,
+        location_name: 'MIT-ADT University, Rajbaug Campus (HOD Regularized)',
+        geofence_status: 'HOD Regularized & Verified',
+        selfie_url: target.selfie_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        remarks: remarks || `Attendance regularized as ${newStatus} by Department Authority`,
+        approver_remarks: remarks
+      };
+      updatedAttendance = [savedRecord, ...updatedAttendance];
+    }
+
+    setAttendance(updatedAttendance);
+
+    if (isSupabaseConfigured && supabase && savedRecord) {
       try {
-        await supabase.from('faculty_attendance').update({ status: newStatus, remarks: remarks }).eq('id', attId);
+        await supabase.from('faculty_attendance').upsert([{
+          id: savedRecord.id,
+          emp_id: savedRecord.emp_id,
+          teacher_name: savedRecord.teacher_name,
+          cadre: savedRecord.cadre,
+          department: savedRecord.department,
+          date: savedRecord.date,
+          punch_in_time: savedRecord.punch_in_time,
+          punch_out_time: savedRecord.punch_out_time,
+          punch_type: savedRecord.punch_type,
+          status: savedRecord.status,
+          work_mode: savedRecord.work_mode,
+          latitude: savedRecord.latitude,
+          longitude: savedRecord.longitude,
+          altitude: savedRecord.altitude,
+          accuracy: savedRecord.accuracy,
+          location_name: savedRecord.location_name,
+          selfie_url: savedRecord.selfie_url,
+          geofence_status: savedRecord.geofence_status,
+          remarks: savedRecord.remarks
+        }], { onConflict: 'emp_id,date' });
       } catch (err) {
         console.warn('Supabase attendance regularize error:', err);
       }
     }
 
     pushNotification('Attendance Regularized', `Attendance record marked as ${newStatus}.`, 'info');
+    return { success: true, record: savedRecord };
   };
 
   const resetToDemoData = () => {
@@ -1199,16 +1294,27 @@ export const AppProvider = ({ children }) => {
     }
 
     // STRICT ROLE AUTHORIZATION GUARD
+    const isHodOrDean = dbTeacherRecord.emp_id?.startsWith('MIT-DEAN-') || 
+      dbTeacherRecord.cadre?.includes('Dean') || 
+      dbTeacherRecord.cadre?.includes('Principal') || 
+      dbTeacherRecord.cadre?.includes('Headmaster') ||
+      dbTeacherRecord.cadre?.includes('HOD') ||
+      dbTeacherRecord.cadre?.includes('Head of Department');
+
     let actualRole = 'teacher';
     if (dbTeacherRecord.emp_id?.startsWith('MIT-APP-') || dbTeacherRecord.cadre === 'Applicant' || dbTeacherRecord.source === 'Applicant') {
       actualRole = 'applicant';
-    } else if (dbTeacherRecord.emp_id?.startsWith('MIT-DEAN-') || dbTeacherRecord.cadre?.includes('Dean') || dbTeacherRecord.cadre?.includes('Principal') || dbTeacherRecord.cadre?.includes('Headmaster')) {
+    } else if (isHodOrDean) {
       actualRole = 'principal';
     } else if (dbTeacherRecord.emp_id === 'MIT-MASTER-ADMIN-01' || dbTeacherRecord.cadre?.includes('System Administrator')) {
       actualRole = 'admin';
     }
 
-    if (roleId !== actualRole) {
+    // An HOD / Dean is authorized to sign in as either 'principal' (department monitoring & approvals)
+    // OR as 'teacher' (to view their personal faculty service book, apply for leaves, punch attendance)
+    const isAllowed = (roleId === actualRole) || (isHodOrDean && roleId === 'teacher');
+
+    if (!isAllowed) {
       const roleLabels = {
         applicant: 'Faculty / Scholar Applicant',
         teacher: 'Faculty Member',
@@ -1226,7 +1332,7 @@ export const AppProvider = ({ children }) => {
       full_name: dbTeacherRecord.full_name || userFullName || 'Faculty Member',
       emp_id: dbTeacherRecord.emp_id,
       email: dbTeacherRecord.email || rawInput,
-      role: actualRole
+      role: roleId
     };
 
     setRole(roleId);

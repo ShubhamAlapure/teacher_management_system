@@ -1,5 +1,5 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp, getLocalDateStr } from '../../context/AppContext';
 import { 
   Users, 
   ArrowLeftRight, 
@@ -75,7 +75,7 @@ export const OverviewDashboard = () => {
   // Personal leave balances for faculty
   const myLeaveBalance = (activeTeacher?.id && leaveBalances?.[activeTeacher.id]) || { casual: 8, medical: 10, earned: 14 };
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateStr();
   const todayAttendance = (attendance || []).filter(a => a?.date === todayStr);
   const myTodayPunch = (attendance || []).find(a => 
     (a.emp_id === displayId || a.teacher_id === activeTeacher?.id) && a.date === todayStr

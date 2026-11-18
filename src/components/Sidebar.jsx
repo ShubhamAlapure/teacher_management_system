@@ -1,5 +1,5 @@
 import React from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, getLocalDateStr } from '../context/AppContext';
 import { 
   LayoutDashboard, 
   UserPlus, 
@@ -29,7 +29,7 @@ export const Sidebar = () => {
   const pendingLeaves = (leaves || []).filter(l => l?.status === 'Pending').length;
   const pendingDocs = (documents || []).filter(d => d?.status === 'Pending').length;
   const appointedCount = (applications || []).filter(a => a?.status === 'Appointed').length;
-  const todayDateStr = new Date().toISOString().split('T')[0];
+  const todayDateStr = getLocalDateStr();
   const todayLateCount = (attendance || []).filter(a => a?.date === todayDateStr && a?.status === 'Late').length;
 
   // Structured Navigation Groups

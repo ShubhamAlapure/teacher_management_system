@@ -60,8 +60,26 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
     }
   ];
 
+  const DEFAULT_CREDENTIALS = {
+    admin: { email: 'admin@mituniversity.edu.in', pass: 'admin@123' },
+    principal: { email: 'abhijit.patil@mituniversity.edu.in', pass: 'admin@123' },
+    teacher: { email: 'priya.sharma@mituniversity.edu.in', pass: 'admin@123' },
+    applicant: { email: 'applicant@mituniversity.edu.in', pass: 'admin@123' }
+  };
+
   const handleRoleSelect = (roleId) => {
     setSelectedRole(roleId);
+    setAuthError('');
+    if (DEFAULT_CREDENTIALS[roleId]) {
+      setEmailInput(DEFAULT_CREDENTIALS[roleId].email);
+      setPassword(DEFAULT_CREDENTIALS[roleId].pass);
+    }
+  };
+
+  const applyDemoPersona = (roleId, email, pass = 'admin@123') => {
+    setSelectedRole(roleId);
+    setEmailInput(email);
+    setPassword(pass);
     setAuthError('');
   };
 
@@ -232,6 +250,39 @@ export const LoginPage = ({ onBackToLanding, defaultRole = 'teacher' }) => {
                       </button>
                     );
                   })}
+                </div>
+
+                {/* Quick 1-Click Demo Persona Fill */}
+                <div className="mt-2.5 pt-2 border-t border-[#E2DDD2] flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-[#5A524D] uppercase tracking-wider mr-1">Demo Quick-Fill:</span>
+                  <button
+                    type="button"
+                    onClick={() => applyDemoPersona('principal', 'abhijit.patil@mituniversity.edu.in')}
+                    className="px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-[#FDF2EE] text-[#E43D12] border border-[#FFA2B6] hover:bg-[#FBE4DD] transition-all"
+                  >
+                    HOD CSE (Dr. Abhijit)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyDemoPersona('teacher', 'priya.sharma@mituniversity.edu.in')}
+                    className="px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-all"
+                  >
+                    Faculty CSE (Dr. Priya)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyDemoPersona('principal', 'dean.soe@mituniversity.edu.in')}
+                    className="px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100 transition-all"
+                  >
+                    Dean SOE (Dr. Rajesh)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyDemoPersona('admin', 'admin@mituniversity.edu.in')}
+                    className="px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100 transition-all"
+                  >
+                    Master Admin
+                  </button>
                 </div>
               </div>
             ) : (
