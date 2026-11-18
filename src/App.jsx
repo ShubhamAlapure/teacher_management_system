@@ -23,6 +23,43 @@ import { AiWorkforceAnalyticsModule } from './components/AI/AiWorkforceAnalytics
 import { AiAssistantChatModule } from './components/AI/AiAssistantChatModule';
 import { AiTrainingRecommendationsModule } from './components/AI/AiTrainingRecommendationsModule';
 
+class ModuleErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('Module Error Boundary caught error:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 bg-white rounded-3xl border border-[#E2DDD2] shadow-sm text-center max-w-xl mx-auto my-12 space-y-4 font-sans">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 text-[#E43D12] mx-auto flex items-center justify-center font-bold text-2xl">
+            !
+          </div>
+          <h2 className="text-xl font-black text-[#1A1412]">Module View Temporarily Unavailable</h2>
+          <p className="text-xs text-[#5A524D] leading-relaxed">
+            The requested module encountered an issue while loading. You can reload this view or switch to another module using the sidebar.
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={() => this.setState({ hasError: false, error: null })}
+              className="px-6 py-2.5 rounded-xl bg-[#E43D12] hover:bg-[#C7310B] text-white font-bold text-xs transition-all shadow-sm"
+            >
+              Reload View
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const MainContent = () => {
   const { activeTab } = useApp();
 
@@ -49,7 +86,9 @@ const MainContent = () => {
 
   return (
     <main className="flex-1 p-4 lg:p-8 overflow-y-auto max-w-7xl mx-auto w-full space-y-6">
-      {renderTab()}
+      <ModuleErrorBoundary key={activeTab}>
+        {renderTab()}
+      </ModuleErrorBoundary>
     </main>
   );
 };

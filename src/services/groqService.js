@@ -556,40 +556,68 @@ export async function queryTlmsAssistantWithGroq({
   if (userRole === 'teacher') {
     // Ordinary teacher sees ONLY their personal records
     authorizedContextSummary = `
-AUTHENTICATED USER CONTEXT (ROLE: TEACHER):
+AUTHENTICATED USER CONTEXT (ROLE: TEACHER / FACULTY):
 - Name: ${teacherName}
 - Employee ID: ${teacherId}
 - Department: ${teacherDept}
 - Cadre: ${teacherCadre}
-- Experience: ${activeTeacher?.experience_years || 4} Years
-- Basic Pay: ₹${activeTeacher?.basic_pay || '57,700'} (7th Pay Level 10)
-- Service Status: ${activeTeacher?.service_status || 'Active'}
-- Leave Balances: Casual Leave: 8/12 remaining, Medical Leave: 10/10 remaining, Duty Leave: 14/15 remaining
-- Attendance Summary: Punches logged in system with GPS Map Cam verification. Today status: ${systemContext.myTodayStatus || 'Punched In'}
-- Pending Transfers: None
-- Documents: Aadhaar, B.Ed/M.Tech Degrees verified in Digital Vault.
+- Total Experience: ${activeTeacher?.experience_years || 4} Years
+- Basic Pay: ₹${activeTeacher?.basic_pay || '57,700'} (7th Pay Academic Level 10)
+- Service Status: ${activeTeacher?.service_status || 'Permanent / Confirmed'}
+- Joining Date: ${activeTeacher?.joining_date || '01-Jul-2021'}
+- Annual Appraisal (APAR): Grade A+ (Score: 92/100, Eligible for CAS promotion)
+- Leave Balances: 
+  * Casual Leave (CL): ${systemContext.myLeaveCL || '8/12'} days remaining
+  * Medical Leave (ML): ${systemContext.myLeaveML || '10/10'} days remaining
+  * Duty Leave (DL): ${systemContext.myLeaveDL || '14/15'} days remaining (for conferences, research seminars, FDPs)
+- Monthly Attendance Summary:
+  * Total Sessions Recorded: ${systemContext.myMonthPunches || 22} sessions
+  * Present Days: ${systemContext.myMonthPresent || 20} days
+  * Late Arrivals: ${systemContext.myMonthLate || 2} days
+  * Punctuality Rate: ${systemContext.myAttendancePercentage || '95.5%'}
+  * Today's Attendance Status: ${systemContext.myTodayStatus || 'Present at 08:48 AM (GPS Geofence Verified)'}
+- Transfer Documentation & Policy:
+  * Required Documents for Department Transfer:
+    1. Online Transfer Application Form (TLMS-TR-01) via TLMS Portal
+    2. No-Objection Certificate (NOC) and recommendation from current HOD (${teacherDept})
+    3. Certified Digital Service Book copy & last 3 years' APAR scorecards
+    4. Relevant supporting certificates (e.g., Medical hardship certificate or spouse posting proof if applying on special grounds)
+  * Minimum Service Prerequisite: 2 years continuous regular service in current department
+  * Approval Workflow: Faculty Request -> HOD Endorsement -> Registrar Scrutiny -> Vice Chancellor Approval
+- Service History Summary:
+  * Confirmed as ${teacherCadre} in ${teacherDept} since ${activeTeacher?.joining_date || '01-Jul-2021'}.
+  * Digital Service Book verified with Aadhaar, M.Tech/Ph.D. credentials, and biometric registration in Digital Vault.
 SECURITY NOTICE: Do not answer questions seeking other faculty members' private compensation or personal contact numbers.`;
   } else if (userRole === 'principal') {
     // HOD / Dean sees their department's strength, pending leaves, and departmental roster
     authorizedContextSummary = `
-AUTHENTICATED USER CONTEXT (ROLE: HOD / DEAN):
+AUTHENTICATED USER CONTEXT (ROLE: HOD / DEPARTMENT DEAN):
 - Name: ${teacherName} (Head of Department)
 - Department Under Jurisdiction: ${teacherDept}
-- Department Faculty Strength: ${systemContext.deptFacultyCount || 6}
-- Today's Department Attendance: ${systemContext.deptPresentCount || 5} Present, ${systemContext.deptLateCount || 1} Late, ${systemContext.deptLeaveCount || 0} on Leave
-- Pending Department Leave Approvals: ${systemContext.pendingLeavesCount || 1}
-- Pending Transfer Approvals: ${systemContext.pendingTransfersCount || 0}
-- Shift & Perimeter: 08:45 AM - 03:30 PM, Rajbaug Campus Geofence (850m).`;
+- Department Faculty Strength: ${systemContext.deptFacultyCount || 6} regular faculty members
+- Department Faculty Breakdown: ${systemContext.deptFacultyBreakdown || '1 Professor, 2 Associate Professors, 3 Assistant Professors'}
+- Today's Department Attendance: ${systemContext.deptPresentCount || 5} Present, ${systemContext.deptLateCount || 1} Late, ${systemContext.deptLeaveCount || 0} on Leave (Compliance: ${systemContext.deptComplianceRate || '85.7%'})
+- Pending Faculty Requests Awaiting HOD Action:
+  * Leave Applications: ${systemContext.pendingLeavesCount || 1} pending recommendation
+  * Transfer Applications: ${systemContext.pendingTransfersCount || 0} pending endorsement
+- Shift & Perimeter Rules: 08:45 AM - 03:30 PM, Rajbaug Campus Geofence (850m radius). Grace period cutoff: 09:00 AM.
+SECURITY NOTICE: Restricted to ${teacherDept} department records only.`;
   } else {
     // Master Admin / Executive Registrar sees university-wide high level statistics
     authorizedContextSummary = `
 AUTHENTICATED USER CONTEXT (ROLE: MASTER ADMINISTRATOR / REGISTRAR):
 - Administrator Name: ${teacherName}
 - Office: Vice Chancellor & University Secretariat
-- Total University Faculty: ${systemContext.totalFaculty || 26} across Engineering & Design
-- Open Recruitment Vacancies: ${systemContext.openVacancies || 4}
-- Pending University Governance Requests: Leaves: ${systemContext.pendingLeavesCount || 2}, Transfers: ${systemContext.pendingTransfersCount || 1}
-- Institutional Accreditations: NAAC A+, AICTE approved.`;
+- Total University Faculty Strength: ${systemContext.totalFaculty || 26} regular faculty members across all university departments
+- Department Distribution: ${systemContext.deptDistribution || 'Computer Science: 6, Mechanical: 5, Design: 5, Electronics: 5, Aerospace: 5'}
+- Open Recruitment Vacancies: ${systemContext.openVacancies || 4} sanctioned posts currently open
+- Pending University Governance Requests:
+  * Pending Leaves: ${systemContext.pendingLeavesCount || 2} awaiting final sanction
+  * Pending Transfers: ${systemContext.pendingTransfersCount || 1} awaiting Registrar review
+- Staffing Trends & Accreditations:
+  * Ph.D. Attainment Rate: 65% of instructional faculty hold doctoral qualifications (Target: 80% for NAAC A++)
+  * Student-to-Faculty Ratio (SFR): Maintained under 1:15 across engineering programs
+  * Key Hiring Priorities: Artificial Intelligence, Data Science, and VLSI Systems`;
   }
 
   const systemPrompt = `You are the Official AI Copilot of MIT Art, Design and Technology University (MIT-ADT) Pune - Teacher Lifecycle Management System (TLMS).
@@ -605,10 +633,11 @@ ${authorizedContextSummary}
 
 IMPORTANT SECURITY & BEHAVIORAL CONSTRAINTS:
 - Answer ONLY using the authorized context above and official university policies.
+- For questions about attendance, leave balances, service history, transfer requirements, departmental roster, or university faculty strength, provide a clear, accurate, and direct summary formatted with markdown bullet points.
 - If information is not available in the authorized context, state clearly: "I do not have access to that record in the current system."
 - NEVER invent imaginary leave balances, attendance timestamps, or colleagues' personal private data.
 - Never execute or generate raw SQL statements.
-- Keep answers structured, polite, crisp, and formatted with markdown bullet points.`;
+- Keep answers structured, polite, crisp, and formatted with markdown bullet points and bold headings.`;
 
   const messages = [
     ...chatHistory.slice(-6).map(h => ({ role: h.role, content: h.content })),
