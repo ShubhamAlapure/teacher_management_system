@@ -18,6 +18,10 @@ import { NotificationsModal } from './components/NotificationsModal';
 import { SupabaseConfigModal } from './components/SupabaseConfigModal';
 import { ShortlistProfileModal } from './components/ShortlistProfileModal';
 import { GroqAssistantModal } from './components/AI/GroqAssistantModal';
+import { AiAttendanceAnomalyModule } from './components/AI/AiAttendanceAnomalyModule';
+import { AiWorkforceAnalyticsModule } from './components/AI/AiWorkforceAnalyticsModule';
+import { AiAssistantChatModule } from './components/AI/AiAssistantChatModule';
+import { AiTrainingRecommendationsModule } from './components/AI/AiTrainingRecommendationsModule';
 
 const MainContent = () => {
   const { activeTab } = useApp();
@@ -34,6 +38,10 @@ const MainContent = () => {
       case 'apar':        return <TrainingAppraisalModule />;
       case 'documents':   return <DocumentVaultModule />;
       case 'analytics':   return <AnalyticsModule />;
+      case 'ai_attendance': return <AiAttendanceAnomalyModule />;
+      case 'ai_workforce':  return <AiWorkforceAnalyticsModule />;
+      case 'ai_assistant':  return <AiAssistantChatModule />;
+      case 'ai_training':   return <AiTrainingRecommendationsModule />;
       case 'dashboard':
       default:            return <OverviewDashboard />;
     }

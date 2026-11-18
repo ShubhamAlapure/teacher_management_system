@@ -30,7 +30,8 @@ export const TrainingAppraisalModule = () => {
     updateAparReview, 
     role,
     currentUser,
-    activeTeacher
+    activeTeacher,
+    setActiveTab
   } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState(
@@ -420,6 +421,13 @@ export const TrainingAppraisalModule = () => {
           >
             <Award className="w-4 h-4" />
             APAR Evaluation Module ({apars.length})
+          </button>
+          <button
+            onClick={() => setActiveTab && setActiveTab('ai_training')}
+            className="px-4 py-2 rounded-xl text-xs font-black bg-[#E43D12] text-white hover:bg-[#C7310B] transition-all flex items-center gap-2 shadow-sm"
+          >
+            <Sparkles className="w-4 h-4 text-[#EFB11D]" />
+            <span>AI Career & Course Recommendations</span>
           </button>
         </div>
       </div>

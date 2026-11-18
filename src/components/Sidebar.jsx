@@ -18,7 +18,10 @@ import {
   Sparkles,
   ArrowRight,
   Building2,
-  GraduationCap
+  GraduationCap,
+  ShieldAlert,
+  Briefcase,
+  Bot
 } from 'lucide-react';
 
 export const Sidebar = () => {
@@ -131,6 +134,39 @@ export const Sidebar = () => {
           icon: BarChart3, 
           roles: ['principal', 'admin'], 
           locked: false 
+        }
+      ]
+    },
+    {
+      group: 'AI INTELLIGENCE SUITE',
+      items: [
+        {
+          id: 'ai_attendance',
+          label: 'Attendance Intelligence',
+          icon: ShieldAlert,
+          roles: ['teacher', 'principal', 'admin'],
+          locked: false
+        },
+        {
+          id: 'ai_workforce',
+          label: 'Workforce Analytics',
+          icon: Briefcase,
+          roles: ['principal', 'admin'],
+          locked: false
+        },
+        {
+          id: 'ai_training',
+          label: 'Training Recommendations',
+          icon: GraduationCap,
+          roles: ['teacher', 'principal', 'admin'],
+          locked: false
+        },
+        {
+          id: 'ai_assistant',
+          label: 'TLMS AI Assistant',
+          icon: Bot,
+          roles: ['teacher', 'principal', 'admin'],
+          locked: false
         }
       ]
     }

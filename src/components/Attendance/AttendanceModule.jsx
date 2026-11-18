@@ -43,7 +43,8 @@ export const AttendanceModule = () => {
     attendance, 
     leaves,
     regularizeAttendance,
-    pushNotification 
+    pushNotification,
+    setActiveTab
   } = useApp();
 
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -752,6 +753,14 @@ export const AttendanceModule = () => {
                 >
                   <Camera className="w-4 h-4" />
                   <span>Mark My Attendance</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab && setActiveTab('ai_attendance')}
+                  className="px-4 py-2.5 rounded-xl bg-[#EFB11D] hover:bg-amber-400 text-[#191210] text-xs font-black shadow-md transition-all flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 fill-[#191210]" />
+                  <span>AI Anomaly Detection</span>
                 </button>
 
                 <button

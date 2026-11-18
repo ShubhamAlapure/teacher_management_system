@@ -22,7 +22,7 @@ import {
 } from 'recharts';
 
 export const AnalyticsModule = () => {
-  const { districtStats, pushNotification } = useApp();
+  const { districtStats, pushNotification, setActiveTab } = useApp();
 
   const [aiSummary, setAiSummary] = useState(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
@@ -94,13 +94,23 @@ export const AnalyticsModule = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleExportCSV}
-          className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold transition-all shadow-md shadow-purple-600/20 flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
-          Export University CSV Report
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setActiveTab && setActiveTab('ai_workforce')}
+            className="px-4 py-2.5 rounded-xl bg-[#E43D12] hover:bg-[#C7310B] text-white text-xs font-black shadow-md transition-all flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4 text-[#EFB11D]" />
+            <span>Open Workforce AI Suite</span>
+          </button>
+
+          <button
+            onClick={handleExportCSV}
+            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold transition-all shadow-md shadow-purple-600/20 flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export University CSV</span>
+          </button>
+        </div>
       </div>
 
       {/* Groq AI Institutional Executive Intelligence Brief */}
