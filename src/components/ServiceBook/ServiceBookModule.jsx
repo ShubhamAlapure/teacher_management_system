@@ -88,7 +88,7 @@ export const ServiceBookModule = () => {
 
           <button
             onClick={handlePrint}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-extrabold transition-all shadow-md shadow-purple-900/20 flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-[#E43D12] hover:bg-[#C7310B] text-white text-xs font-extrabold transition-all shadow-md shadow-[#E43D12]/20 flex items-center gap-2"
           >
             <Printer className="w-4 h-4" />
             <span>Print Official Service Book</span>

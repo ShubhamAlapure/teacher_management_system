@@ -160,9 +160,9 @@ export function renderGpsMapCamCanvas({
   } else {
     // Fallback if camera stream wasn't ready or was blank
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, '#1e1138');
-    bgGrad.addColorStop(0.5, '#2e1854');
-    bgGrad.addColorStop(1, '#0e071c');
+    bgGrad.addColorStop(0, '#24120E');
+    bgGrad.addColorStop(0.5, '#361611');
+    bgGrad.addColorStop(1, '#140A07');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
@@ -178,7 +178,7 @@ export function renderGpsMapCamCanvas({
     ctx.textAlign = 'center';
     ctx.fillText('FACULTY VERIFIED ATTENDANCE', width / 2, height * 0.38);
 
-    ctx.fillStyle = '#c084fc';
+    ctx.fillStyle = '#FFA2B6';
     ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
     ctx.fillText(facultyName, width / 2, height * 0.38 + 42);
   }
@@ -192,7 +192,7 @@ export function renderGpsMapCamCanvas({
 
   // Top Left: Punch Status Badge
   const isPunchIn = punchType.toUpperCase().includes('IN');
-  const badgeColor = isPunchIn ? '#10b981' : '#f59e0b';
+  const badgeColor = isPunchIn ? '#10b981' : '#EFB11D';
   
   ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
   ctx.strokeStyle = badgeColor;
@@ -216,7 +216,7 @@ export function renderGpsMapCamCanvas({
   ctx.lineWidth = 1.5;
   roundRect(ctx, width - 360, 36, 320, 52, 26, true, true);
 
-  ctx.fillStyle = '#fde047'; // Gold
+  ctx.fillStyle = '#EFB11D'; // Gold
   ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'right';
   ctx.fillText('MIT-ADT UNIVERSITY', width - 70, 68);
@@ -227,18 +227,18 @@ export function renderGpsMapCamCanvas({
 
   // Dark frosted glass overlay
   const bannerGrad = ctx.createLinearGradient(0, bannerY - 40, 0, height);
-  bannerGrad.addColorStop(0, 'rgba(10, 8, 22, 0)');
-  bannerGrad.addColorStop(0.15, 'rgba(13, 10, 29, 0.88)');
-  bannerGrad.addColorStop(0.3, 'rgba(10, 7, 24, 0.96)');
-  bannerGrad.addColorStop(1, '#080514');
+  bannerGrad.addColorStop(0, 'rgba(16, 8, 6, 0)');
+  bannerGrad.addColorStop(0.15, 'rgba(22, 11, 8, 0.88)');
+  bannerGrad.addColorStop(0.3, 'rgba(18, 9, 7, 0.96)');
+  bannerGrad.addColorStop(1, '#100705');
   ctx.fillStyle = bannerGrad;
   ctx.fillRect(0, bannerY - 40, width, bannerHeight + 40);
 
   // Accent line top of banner
   const lineGrad = ctx.createLinearGradient(40, bannerY, width - 40, bannerY);
-  lineGrad.addColorStop(0, '#8b5cf6');
-  lineGrad.addColorStop(0.5, '#ec4899');
-  lineGrad.addColorStop(1, '#3b82f6');
+  lineGrad.addColorStop(0, '#E43D12');
+  lineGrad.addColorStop(0.5, '#FFA2B6');
+  lineGrad.addColorStop(1, '#EFB11D');
   ctx.fillStyle = lineGrad;
   ctx.fillRect(40, bannerY, width - 80, 4);
 
@@ -318,7 +318,7 @@ export function renderGpsMapCamCanvas({
   ctx.textAlign = 'left';
   ctx.fillText(facultyName, textLeft, bannerY + 48);
 
-  ctx.fillStyle = '#c084fc';
+  ctx.fillStyle = '#FFA2B6';
   ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
   ctx.fillText(`${cadre} • ${empId}`, textLeft, bannerY + 76);
 
@@ -336,7 +336,7 @@ export function renderGpsMapCamCanvas({
   ctx.stroke();
 
   // Line 3: Location Name (Truncated if too long)
-  ctx.fillStyle = '#fde047'; // Gold
+  ctx.fillStyle = '#EFB11D'; // Gold
   ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
   ctx.fillText('📍 ' + locationName.slice(0, 68) + (locationName.length > 68 ? '...' : ''), textLeft, bannerY + 144);
 

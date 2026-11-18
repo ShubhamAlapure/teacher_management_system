@@ -285,7 +285,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in">
-      <div className="bg-[#120a26] text-white w-full max-w-2xl rounded-3xl border border-purple-500/30 shadow-2xl overflow-hidden flex flex-col my-auto relative">
+      <div className="bg-[#18110E] text-white w-full max-w-2xl rounded-3xl border border-[#E43D12]/30 shadow-2xl overflow-hidden flex flex-col my-auto relative">
         
         {/* Shutter Flash Animation */}
         {shutterFlash && (
@@ -293,7 +293,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
         )}
 
         {/* Modal Top Bar */}
-        <div className="px-5 py-4 bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 border-b border-purple-800/40 flex items-center justify-between">
+        <div className="px-5 py-4 bg-gradient-to-r from-[#170E0C] via-[#24130F] to-[#2E1612] border-b border-[#E43D12]/30 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-purple-600/40 border border-purple-400/30 flex items-center justify-center text-purple-300">
               <Camera className="w-4 h-4" />
@@ -588,7 +588,7 @@ export const GpsMapCamera = ({ onClose, onSuccess, defaultPunchType = 'IN' }) =>
                 <button
                   type="button"
                   onClick={capturePhoto}
-                  className="flex-1 py-3 px-6 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-extrabold shadow-lg shadow-purple-900/40 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-6 rounded-2xl bg-[#E43D12] hover:bg-[#C7310B] text-white text-sm font-black shadow-lg shadow-[#E43D12]/30 transition-all flex items-center justify-center gap-2"
                 >
                   <Camera className="w-4 h-4" />
                   <span>Capture Selfie with GPS Map Cam</span>

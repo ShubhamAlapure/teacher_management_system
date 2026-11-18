@@ -58,7 +58,7 @@ export const AttendanceDetailModal = ({ record, onClose }) => {
       <div className="bg-white text-slate-900 w-full max-w-3xl rounded-3xl border border-purple-200 shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
         
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white flex items-center justify-between border-b border-purple-800">
+        <div className="px-6 py-4 bg-gradient-to-r from-[#1A110F] via-[#2A1612] to-[#3B1912] text-white flex items-center justify-between border-b border-[#E43D12]/30">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-purple-600/40 border border-purple-400/30 flex items-center justify-center text-purple-200">
               <MapPin className="w-5 h-5 text-yellow-300" />

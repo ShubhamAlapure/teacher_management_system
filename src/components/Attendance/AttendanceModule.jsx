@@ -206,18 +206,18 @@ export const AttendanceModule = () => {
         <div className="space-y-6">
           
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-purple-900 via-indigo-950 to-purple-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-700/40 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#1A110F] via-[#2A1612] to-[#3B1912] text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-[#E43D12]/30 relative overflow-hidden">
             <div className="absolute -right-10 -bottom-10 opacity-15">
-              <Camera className="w-72 h-72 text-purple-300" />
+              <Camera className="w-72 h-72 text-[#FFA2B6]" />
             </div>
 
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2 max-w-xl">
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-white/20 text-yellow-300 border border-white/20 uppercase tracking-wider">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black bg-[#EFB11D] text-[#191210] uppercase tracking-wider shadow-sm">
                     GPS MAP CAM ATTENDANCE
                   </span>
-                  <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-purple-500/30 text-purple-200 border border-purple-400/30">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#E43D12]/30 text-[#FFA2B6] border border-[#FFA2B6]/40">
                     Shift: 08:45 AM – 03:30 PM (Grace till 09:00 AM)
                   </span>
                   <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
@@ -228,7 +228,7 @@ export const AttendanceModule = () => {
                 <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
                   Mark Your Daily Attendance
                 </h2>
-                <p className="text-xs text-purple-200 leading-relaxed">
+                <p className="text-xs text-[#EAE4DF] leading-relaxed">
                   Open the GPS Camera to snap a selfie. The system automatically imprints verified latitude, longitude, altitude (ASL), address, and timestamp directly onto your photo.
                 </p>
               </div>
@@ -492,16 +492,16 @@ export const AttendanceModule = () => {
         <div className="space-y-6">
           
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-purple-900 via-indigo-950 to-purple-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-800/40 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#1A110F] via-[#2A1612] to-[#3B1912] text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-[#E43D12]/30 relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2">
-                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-purple-500/30 text-purple-200 border border-purple-400/30 uppercase tracking-wider">
+                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#E43D12]/30 text-[#FFA2B6] border border-[#FFA2B6]/40 uppercase tracking-wider">
                   {role === 'admin' ? 'University Executive Registrar Desk' : 'HOD & Dean Academic Surveillance'}
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
                   Faculty Geo-Attendance Monitoring Desk
                 </h2>
-                <p className="text-xs text-purple-200 max-w-xl leading-relaxed">
+                <p className="text-xs text-[#EAE4DF] max-w-xl leading-relaxed">
                   Real-time live monitoring of university faculty punches. View tamper-proof GPS Map Cam selfies, GPS telemetry, altitude above sea level, and geofence verification across all engineering departments.
                 </p>
               </div>

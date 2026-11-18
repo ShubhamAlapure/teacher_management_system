@@ -88,26 +88,26 @@ export const OverviewDashboard = () => {
       {role === 'principal' && (
         <div className="space-y-6">
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white rounded-3xl p-6 shadow-xl border border-purple-800/40 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#1A110F] via-[#2A1612] to-[#3B1912] text-white rounded-3xl p-6 shadow-xl border border-[#E43D12]/30 relative overflow-hidden">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
               <div className="space-y-1">
-                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-purple-500/30 text-purple-200 border border-purple-400/30 uppercase tracking-wider">
+                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#E43D12]/30 text-[#FFA2B6] border border-[#FFA2B6]/40 uppercase tracking-wider">
                   HOD & Dean Approval Desk
                 </span>
                 <h2 className="text-2xl font-black tracking-tight">{displayName}</h2>
-                <p className="text-xs text-purple-200">
+                <p className="text-xs text-[#EAE4DF]">
                   School Dean &bull; School of Engineering & Technology (SOE) &bull; Rajbaug Campus
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
                 <div className="px-4 py-2 rounded-2xl bg-white/10 border border-white/20 text-center">
-                  <p className="text-[10px] font-bold text-purple-200 uppercase">Department Faculty</p>
+                  <p className="text-[10px] font-bold text-[#FFA2B6] uppercase">Department Faculty</p>
                   <p className="text-lg font-black text-white">{teachers.length || 42}</p>
                 </div>
-                <div className="px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-400/30 text-center">
-                  <p className="text-[10px] font-bold text-amber-200 uppercase">Pending Approvals</p>
-                  <p className="text-lg font-black text-amber-300">{pendingLeavesCount + activeTransfersCount}</p>
+                <div className="px-4 py-2 rounded-2xl bg-[#EFB11D]/20 border border-[#EFB11D]/40 text-center">
+                  <p className="text-[10px] font-bold text-[#EFB11D] uppercase">Pending Approvals</p>
+                  <p className="text-lg font-black text-[#EFB11D]">{pendingLeavesCount + activeTransfersCount}</p>
                 </div>
               </div>
             </div>
@@ -209,13 +209,13 @@ export const OverviewDashboard = () => {
       {/* 2. Applicant Custom Dashboard */}
       {role === 'applicant' && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950 text-white rounded-3xl p-6 shadow-xl border border-purple-800/40 space-y-3">
-            <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-yellow-400 text-purple-950 uppercase tracking-widest">
+          <div className="bg-gradient-to-r from-[#1A110F] via-[#2A1612] to-[#3B1912] text-white rounded-3xl p-6 shadow-xl border border-[#E43D12]/30 space-y-3">
+            <span className="px-3 py-1 rounded-full text-[10px] font-black bg-[#EFB11D] text-[#191210] uppercase tracking-widest shadow-sm">
               Faculty & Scholar Recruitment Portal
             </span>
             <h2 className="text-2xl font-black tracking-tight">{displayName}</h2>
-            <p className="text-xs text-purple-200">
-              Application ID: <strong className="font-mono text-yellow-300">{displayId}</strong> &bull; Status: <span className="text-emerald-400 font-bold">Application Submitted for Document Verification</span>
+            <p className="text-xs text-[#EAE4DF]">
+              Application ID: <strong className="font-mono text-[#EFB11D]">{displayId}</strong> &bull; Status: <span className="text-emerald-400 font-bold">Application Submitted for Document Verification</span>
             </p>
           </div>
 
@@ -255,49 +255,49 @@ export const OverviewDashboard = () => {
       {role === 'teacher' && (
         <div className="space-y-6">
           {/* Welcome Banner */}
-          <div className="bg-gradient-to-r from-purple-800 via-purple-900 to-indigo-900 text-white rounded-3xl p-6 shadow-xl border border-purple-700/40 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #a78bfa 0%, transparent 60%)' }} />
+          <div className="bg-gradient-to-r from-[#1A110F] via-[#2A1612] to-[#3B1912] text-white rounded-3xl p-6 shadow-xl border border-[#E43D12]/30 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #FFA2B6 0%, transparent 60%)' }} />
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
-                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-white/20 text-purple-100 border border-white/20 uppercase tracking-wider">
+                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#E43D12]/30 text-[#FFA2B6] border border-[#FFA2B6]/40 uppercase tracking-wider">
                   Faculty Portal — MIT-ADT University
                 </span>
                 <h2 className="text-2xl font-black tracking-tight">Welcome, {displayName}</h2>
-                <p className="text-xs text-purple-200">
-                  Employee ID: <strong className="font-mono text-yellow-300">{displayId}</strong> &bull; {activeTeacher?.current_school || 'School of Engineering & Technology'}
+                <p className="text-xs text-[#EAE4DF]">
+                  Employee ID: <strong className="font-mono text-[#EFB11D]">{displayId}</strong> &bull; {activeTeacher?.current_school || 'School of Engineering & Technology'}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="px-4 py-2 rounded-2xl bg-white/10 border border-white/20 text-center">
-                  <p className="text-[10px] font-bold text-purple-200 uppercase">Leave Balance</p>
+                  <p className="text-[10px] font-bold text-[#FFA2B6] uppercase">Leave Balance</p>
                   <p className="text-lg font-black text-white">{(myLeaveBalance.casual || 0) + (myLeaveBalance.earned || 0)} Days</p>
                 </div>
-                <div className="px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-400/30 text-center">
-                  <p className="text-[10px] font-bold text-amber-200 uppercase">Pending</p>
-                  <p className="text-lg font-black text-amber-300">{pendingLeavesCount}</p>
+                <div className="px-4 py-2 rounded-2xl bg-[#EFB11D]/20 border border-[#EFB11D]/40 text-center">
+                  <p className="text-[10px] font-bold text-[#EFB11D] uppercase">Pending</p>
+                  <p className="text-lg font-black text-[#EFB11D]">{pendingLeavesCount}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Interactive Quick Attendance Action Card */}
-          <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white rounded-3xl p-5 shadow-lg border border-purple-700/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-gradient-to-r from-[#1A110F] via-[#241310] to-[#2E1612] text-white rounded-3xl p-5 shadow-lg border border-[#E43D12]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-purple-600/50 border border-purple-400/40 flex items-center justify-center text-yellow-300 shrink-0 shadow-md">
+              <div className="w-12 h-12 rounded-2xl bg-[#E43D12]/30 border border-[#E43D12]/40 flex items-center justify-center text-[#EFB11D] shrink-0 shadow-md">
                 <Camera className="w-6 h-6" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-extrabold text-white">Daily Smart GPS Attendance</h4>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                  <h4 className="text-sm font-black text-white">Daily Smart GPS Attendance</h4>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
                     myTodayPunch 
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' 
-                      : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                      : 'bg-[#EFB11D]/20 text-[#EFB11D] border border-[#EFB11D]/40'
                   }`}>
                     {myTodayPunch ? (myTodayPunch.punch_out_time ? 'Punched Out' : 'Punched In') : 'Not Checked In'}
                   </span>
                 </div>
-                <p className="text-xs text-purple-200 mt-0.5">
+                <p className="text-xs text-[#EAE4DF] mt-0.5">
                   {myTodayPunch 
                     ? `Recorded at ${myTodayPunch.punch_in_time} • ${myTodayPunch.location_name}`
                     : 'Camera captures your selfie with stamped location name, lat/long & altitude (ASL).'
@@ -308,7 +308,7 @@ export const OverviewDashboard = () => {
 
             <button
               onClick={() => setActiveTab('attendance')}
-              className="py-2.5 px-5 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2 shrink-0"
+              className="py-2.5 px-5 rounded-2xl bg-[#E43D12] hover:bg-[#C7310B] text-white text-xs font-black shadow-md shadow-[#E43D12]/20 transition-all flex items-center justify-center gap-2 shrink-0"
             >
               <Camera className="w-4 h-4" />
               <span>{myTodayPunch ? 'View / Punch Out' : 'Open GPS Camera'} &rarr;</span>
@@ -615,8 +615,8 @@ export const OverviewDashboard = () => {
                       <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
                       <YAxis stroke="#64748b" fontSize={11} />
                       <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', fontSize: '12px' }} />
-                      <Bar dataKey="total_teachers" name="Filled Posts" fill="#7c3aed" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="vacancies" name="Vacancies" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="total_teachers" name="Filled Posts" fill="#E43D12" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="vacancies" name="Vacancies" fill="#EFB11D" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

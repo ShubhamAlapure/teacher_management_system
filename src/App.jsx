@@ -73,7 +73,7 @@ const AppShell = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f3f8] text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#EBE9E1] text-[#1A1412] flex flex-col font-sans">
       <Navbar />
       <div className="flex flex-1">
         <Sidebar />

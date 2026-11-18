@@ -48,7 +48,7 @@ export const Navbar = () => {
   };
 
   return (
-    <header className="no-print h-16 bg-gradient-to-r from-[#1e0b3b] via-[#311363] to-[#451884] text-white border-b border-purple-800/40 px-4 lg:px-6 flex items-center justify-between shadow-lg sticky top-0 z-40">
+    <header className="no-print h-16 bg-[#18110E] text-white border-b border-[#E43D12]/30 px-4 lg:px-6 flex items-center justify-between shadow-lg sticky top-0 z-40">
       
       {/* Brand & Logo */}
       <div className="flex items-center gap-4">
@@ -61,11 +61,11 @@ export const Navbar = () => {
         {/* Notifications Bell */}
         <button
           onClick={() => setIsNotificationModalOpen(true)}
-          className="relative p-2 rounded-full bg-purple-950/50 text-purple-200 hover:bg-purple-800/40 transition-all border border-purple-400/20"
+          className="relative p-2 rounded-full bg-white/5 text-[#FFA2B6] hover:bg-white/10 transition-all border border-[#FFA2B6]/20"
         >
           <Bell className="w-4 h-4" />
           {notifications.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-yellow-400 text-[10px] font-extrabold text-purple-950 flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#EFB11D] text-[10px] font-black text-[#18110E] flex items-center justify-center shadow-sm">
               {notifications.length}
             </span>
           )}
@@ -75,35 +75,35 @@ export const Navbar = () => {
         <div className="relative">
           <button
             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-            className="flex items-center gap-3 px-3 py-1 rounded-full bg-purple-950/40 border border-purple-400/30 hover:bg-purple-800/50 transition-all text-right"
+            className="flex items-center gap-3 px-3 py-1 rounded-full bg-white/5 border border-white/15 hover:bg-white/10 transition-all text-right"
           >
             <div className="hidden lg:block">
               <div className="text-xs font-extrabold uppercase text-white tracking-wide">
                 {displayName}
               </div>
-              <div className="text-[10px] text-purple-200 font-mono tracking-tight">
+              <div className="text-[10px] text-[#FFA2B6] font-mono tracking-tight">
                 {displayId} &bull; <span>{role === 'principal' ? 'School Dean' : role === 'admin' ? 'Master Admin' : role === 'teacher' ? 'Faculty' : 'Applicant'}</span>
               </div>
             </div>
 
-            <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center border-2 border-purple-300 shadow-md font-bold text-xs">
+            <div className="w-8 h-8 rounded-full bg-[#E43D12] text-white flex items-center justify-center border-2 border-[#FFA2B6] shadow-md font-bold text-xs">
               {userInitials}
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-purple-200" />
+            <ChevronDown className="w-3.5 h-3.5 text-[#FFA2B6]" />
           </button>
 
           {/* User Account Menu */}
           {isRoleDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-72 bg-white border border-purple-200 rounded-2xl shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 text-slate-800">
+            <div className="absolute right-0 mt-2 w-72 bg-white border border-[#E2DDD2] rounded-2xl shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 text-slate-800">
               
               {/* Profile Card Header */}
               <div className="flex items-center gap-3 pb-3 border-b border-purple-100">
-                <div className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
+                <div className="w-10 h-10 rounded-full bg-[#E43D12] text-white flex items-center justify-center font-bold text-sm shadow-md">
                   {userInitials}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-extrabold text-purple-950 truncate">{displayName}</p>
-                  <p className="text-[11px] text-slate-500 font-mono">{displayId}</p>
+                  <p className="text-xs font-extrabold text-[#1A1412] truncate">{displayName}</p>
+                  <p className="text-[11px] text-[#6B625B] font-mono">{displayId}</p>
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-1 border border-emerald-200">
                     <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Authenticated {role === 'principal' ? 'SCHOOL DEAN' : role === 'admin' ? 'MASTER ADMIN' : role.toUpperCase()}
                   </span>
@@ -113,11 +113,11 @@ export const Navbar = () => {
               {/* Account Details */}
               <div className="py-3 text-xs space-y-1.5 text-slate-600">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Campus:</span>
-                  <span className="font-semibold text-slate-800">MIT-ADT Rajbaug Campus</span>
+                  <span className="text-[#8C827A]">Campus:</span>
+                  <span className="font-semibold text-[#1A1412]">MIT-ADT Rajbaug Campus</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Database:</span>
+                  <span className="text-[#8C827A]">Database:</span>
                   <span className="font-semibold text-emerald-700 font-mono">Live PostgreSQL</span>
                 </div>
               </div>
@@ -140,9 +140,9 @@ export const Navbar = () => {
                     setIsRoleDropdownOpen(false);
                     logout();
                   }}
-                  className="w-full py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all flex items-center justify-center gap-2"
+                  className="w-full py-2 px-3 rounded-xl bg-[#FFF0F3] hover:bg-[#FDE4E9] text-[#D6536D] border border-[#FFA2B6] text-xs font-bold transition-all flex items-center justify-center gap-2"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-rose-600" />
+                  <LogOut className="w-3.5 h-3.5 text-[#D6536D]" />
                   Sign Out of Portal
                 </button>
               </div>
@@ -154,8 +154,8 @@ export const Navbar = () => {
 
       {/* MODAL: Edit Profile Details */}
       {isEditProfileModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-purple-200 text-slate-800 font-sans animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-[#18110E]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-[#E2DDD2] text-slate-800 font-sans animate-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-purple-100 pb-3">
               <div className="flex items-center gap-2">
                 <Edit3 className="w-4 h-4 text-purple-600" />

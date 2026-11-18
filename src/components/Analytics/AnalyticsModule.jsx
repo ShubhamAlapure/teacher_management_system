@@ -113,7 +113,7 @@ export const AnalyticsModule = () => {
                 <XAxis dataKey="year" stroke="#64748b" fontSize={11} />
                 <YAxis stroke="#64748b" fontSize={11} />
                 <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', fontSize: '12px' }} />
-                <Area type="monotone" dataKey="count" name="Retiring Teachers" stroke="#7c3aed" fill="#7c3aed" fillOpacity={0.15} />
+                <Area type="monotone" dataKey="count" name="Retiring Teachers" stroke="#E43D12" fill="#E43D12" fillOpacity={0.15} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

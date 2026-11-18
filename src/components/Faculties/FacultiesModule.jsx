@@ -77,19 +77,19 @@ export const FacultiesModule = () => {
   const newAppts = newlyAppointed.length;
 
   const cadreColor = (cadre = '') => {
-    if (cadre.includes('HOD') || cadre === 'Professor') return 'bg-purple-100 text-purple-900 border border-purple-200';
-    if (cadre === 'Associate Professor') return 'bg-indigo-100 text-indigo-900 border border-indigo-200';
+    if (cadre.includes('HOD') || cadre === 'Professor') return 'bg-[#FDF2EE] text-[#E43D12] border border-[#FFA2B6]';
+    if (cadre === 'Associate Professor') return 'bg-[#FFF0F3] text-[#D6536D] border border-[#FFA2B6]';
     if (cadre === 'Assistant Professor') return 'bg-sky-100 text-sky-900 border border-sky-200';
-    if (cadre.includes('Dean') || cadre.includes('School Dean')) return 'bg-amber-100 text-amber-900 border border-amber-200';
+    if (cadre.includes('Dean') || cadre.includes('School Dean')) return 'bg-[#FEF8E7] text-[#966705] border border-[#F6D688]';
     return 'bg-slate-100 text-slate-700 border border-slate-200';
   };
 
   const avatarGradient = (cadre = '') => {
-    if (cadre.includes('HOD') || cadre === 'Professor') return 'from-purple-600 to-indigo-700';
-    if (cadre === 'Associate Professor') return 'from-indigo-500 to-blue-600';
+    if (cadre.includes('HOD') || cadre === 'Professor') return 'from-[#E43D12] to-[#D6536D]';
+    if (cadre === 'Associate Professor') return 'from-[#D6536D] to-[#E43D12]';
     if (cadre === 'Assistant Professor') return 'from-sky-500 to-cyan-600';
-    if (cadre.includes('Dean')) return 'from-amber-500 to-orange-600';
-    return 'from-slate-500 to-slate-700';
+    if (cadre.includes('Dean')) return 'from-[#EFB11D] to-[#E43D12]';
+    return 'from-slate-600 to-slate-800';
   };
 
   return (

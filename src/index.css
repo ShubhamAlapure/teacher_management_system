@@ -4,82 +4,89 @@
 
 @layer base {
   body {
-    background-color: #f4f3f8;
-    color: #1e1b4b;
-    font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
-    antialiased: true;
+    background-color: #EBE9E1;
+    color: #1A1412;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Light Theme Card Utilities */
+/* Warm Editorial Card Utilities matching Palette:
+   #E43D12 (Vermillion Flame)
+   #D6536D (Raspberry Rose)
+   #FFA2B6 (Blossom Pink)
+   #EFB11D (Saffron Gold)
+   #EBE9E1 (Sandstone Cream)
+*/
 .theme-card {
   background-color: #ffffff;
-  border: 1px solid #e9e5f5;
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px 0 rgba(124, 58, 237, 0.04), 0 1px 2px -1px rgba(124, 58, 237, 0.04);
+  border: 1px solid #E2DDD2;
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 3px 0 rgba(228, 61, 18, 0.03), 0 1px 2px -1px rgba(228, 61, 18, 0.03);
 }
 
 .theme-panel {
-  background-color: #ffffff;
-  border: 1px solid #e2dcfa;
+  background-color: #FAF9F5;
+  border: 1px solid #DDD7CB;
   border-radius: 1.25rem;
-  box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(228, 61, 18, 0.04);
 }
 
 .theme-input {
   background-color: #ffffff;
-  border: 1px solid #d8b4fe;
-  color: #1e1b4b;
+  border: 1px solid #FFA2B6;
+  color: #1A1412;
 }
 
 .theme-input:focus {
-  border-color: #7c3aed;
+  border-color: #E43D12;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 0 0 3px rgba(228, 61, 18, 0.15);
 }
 
-/* Pastel Theme Card Styles matching Screenshot */
+/* Color Accent Cards */
 .pastel-blue-card {
-  background-color: #edf2ff;
-  border: 1px solid #dbe4ff;
-  color: #3b5bdb;
+  background-color: #F7F5F0;
+  border: 1px solid #DDD7CB;
+  color: #1A1412;
 }
 
 .pastel-yellow-card {
-  background-color: #fff9db;
-  border: 1px solid #fff3bf;
-  color: #f59f00;
+  background-color: #FEF8E7;
+  border: 1px solid #F7D688;
+  color: #966705;
 }
 
 .pastel-purple-card {
-  background-color: #f3d9fa;
-  border: 1px solid #eebefa;
-  color: #ae3ec9;
+  background-color: #FFF0F3;
+  border: 1px solid #FFA2B6;
+  color: #D6536D;
 }
 
 .pastel-gray-card {
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
-  color: #adb5bd;
+  background-color: #F5F3EC;
+  border: 1px solid #E2DDD2;
+  color: #6B625B;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar in Warm Editorial Palette */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1edfa;
+  background: #EBE9E1;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c084fc;
+  background: #FFA2B6;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7c3aed;
+  background: #E43D12;
 }
 
 /* Print Utilities & Official Document Layout */

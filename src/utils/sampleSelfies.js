@@ -9,22 +9,22 @@ export function createSampleGpsSelfieSvg({
   alt = '564.2 m ASL',
   location = 'MIT-ADT University, Rajbaug, Pune',
   punchType = 'PUNCH IN',
-  avatarBg = '#31105e'
+  avatarBg = '#2A1410'
 }) {
   const isPunchIn = punchType.includes('IN');
-  const badgeColor = isPunchIn ? '#10b981' : '#f59e0b';
+  const badgeColor = isPunchIn ? '#10b981' : '#EFB11D';
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" width="600" height="750">
     <defs>
       <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${avatarBg}"/>
-        <stop offset="50%" stop-color="#190a36"/>
-        <stop offset="100%" stop-color="#090414"/>
+        <stop offset="50%" stop-color="#1A0D0A"/>
+        <stop offset="100%" stop-color="#100806"/>
       </linearGradient>
       <linearGradient id="banner" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="rgba(10, 8, 22, 0.2)"/>
-        <stop offset="25%" stop-color="rgba(12, 9, 28, 0.95)"/>
-        <stop offset="100%" stop-color="#070311"/>
+        <stop offset="0%" stop-color="rgba(16, 8, 6, 0.2)"/>
+        <stop offset="25%" stop-color="rgba(20, 10, 8, 0.95)"/>
+        <stop offset="100%" stop-color="#0E0605"/>
       </linearGradient>
     </defs>
 
@@ -42,11 +42,11 @@ export function createSampleGpsSelfieSvg({
     <circle cx="44" cy="34" r="6" fill="${badgeColor}"/>
     <text x="60" y="39" fill="#ffffff" font-family="system-ui, sans-serif" font-size="13" font-weight="bold">${punchType}</text>
 
-    <text x="575" y="39" fill="#fde047" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" text-anchor="end">MIT-ADT UNIVERSITY</text>
+    <text x="575" y="39" fill="#EFB11D" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" text-anchor="end">MIT-ADT UNIVERSITY</text>
 
     <!-- Bottom GPS Map Cam Overlay Banner -->
     <rect x="0" y="470" width="600" height="280" fill="url(#banner)"/>
-    <rect x="25" y="485" width="550" height="2" fill="#8b5cf6"/>
+    <rect x="25" y="485" width="550" height="2" fill="#E43D12"/>
 
     <!-- Mini Radar / Compass Box -->
     <rect x="25" y="505" width="110" height="110" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
@@ -60,9 +60,9 @@ export function createSampleGpsSelfieSvg({
 
     <!-- Telemetry Details -->
     <text x="155" y="525" fill="#ffffff" font-family="system-ui, sans-serif" font-size="18" font-weight="bold">${name}</text>
-    <text x="155" y="546" fill="#c084fc" font-family="monospace" font-size="13" font-weight="bold">${empId}</text>
+    <text x="155" y="546" fill="#FFA2B6" font-family="monospace" font-size="13" font-weight="bold">${empId}</text>
 
-    <text x="155" y="572" fill="#fde047" font-family="system-ui, sans-serif" font-size="12" font-weight="bold">📍 ${location}</text>
+    <text x="155" y="572" fill="#EFB11D" font-family="system-ui, sans-serif" font-size="12" font-weight="bold">📍 ${location}</text>
     <text x="155" y="594" fill="#e2e8f0" font-family="monospace" font-size="12">🌐 Lat: ${lat} | Long: ${lng}</text>
     <text x="155" y="614" fill="#a5f3fc" font-family="monospace" font-size="12">⛰️ Alt: ${alt} • Precision: ± 3.8 m</text>
     <text x="155" y="636" fill="#f1f5f9" font-family="system-ui, sans-serif" font-size="12" font-weight="bold">🕒 ${date} • ${time}</text>

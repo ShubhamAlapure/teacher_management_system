@@ -67,15 +67,15 @@ export const ShortlistProfileModal = () => {
       <div className="bg-white rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-6 shadow-2xl border border-purple-200 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto font-sans">
         
         {/* Header Celebration Banner */}
-        <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white p-6 rounded-2xl relative overflow-hidden space-y-2 shadow-lg">
+        <div className="bg-gradient-to-r from-[#1A110F] via-[#2A1612] to-[#3B1912] text-white p-6 rounded-2xl relative overflow-hidden space-y-2 shadow-lg border border-[#E43D12]/30">
           <div className="flex items-center justify-between relative z-10">
-            <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-amber-400 text-purple-950 uppercase tracking-widest flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-purple-950" />
+            <span className="px-3 py-1 rounded-full text-[10px] font-black bg-[#EFB11D] text-[#191210] uppercase tracking-widest flex items-center gap-1 shadow-sm">
+              <Sparkles className="w-3 h-3 text-[#191210]" />
               HOD Selection Notification
             </span>
             <button 
               onClick={() => setIsOpen(false)}
-              className="p-1 rounded-full text-purple-200 hover:bg-white/10 transition-all"
+              className="p-1 rounded-full text-[#FFA2B6] hover:bg-white/10 transition-all"
             >
               <X className="w-5 h-5" />
             </button>
@@ -84,10 +84,10 @@ export const ShortlistProfileModal = () => {
           <h3 className="text-xl font-black text-white relative z-10">
             🎉 Congratulations, {userName}!
           </h3>
-          <p className="text-xs text-purple-200 relative z-10 leading-relaxed">
-            You have been <strong className="text-amber-300 font-extrabold">SHORTLISTED</strong> by the School Dean & Selection Committee for the Faculty Appointment Drive (<span className="font-mono text-purple-300">{myApp?.drive_code || 'MIT-SOE-2026'}</span>).
+          <p className="text-xs text-[#EAE4DF] relative z-10 leading-relaxed">
+            You have been <strong className="text-[#EFB11D] font-extrabold">SHORTLISTED</strong> by the School Dean & Selection Committee for the Faculty Appointment Drive (<span className="font-mono text-[#FFA2B6]">{myApp?.drive_code || 'MIT-SOE-2026'}</span>).
           </p>
-          <p className="text-[11px] text-purple-300 font-bold relative z-10 pt-1">
+          <p className="text-[11px] text-[#FFA2B6] font-bold relative z-10 pt-1">
             Please complete your mandatory e-Service Book details below to finalize your registration and proceed to Document Verification.
           </p>
         </div>

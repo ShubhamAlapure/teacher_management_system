@@ -91,10 +91,10 @@ export const Sidebar = () => {
   const visibleMenuItems = menuItems.filter(item => item.roles.includes(role));
 
   return (
-    <aside className="no-print w-64 bg-white border-r border-purple-100 shrink-0 hidden lg:flex flex-col justify-between p-4 min-h-[calc(100vh-65px)] shadow-sm">
+    <aside className="no-print w-64 bg-white border-r border-[#E2DDD2] shrink-0 hidden lg:flex flex-col justify-between p-4 min-h-[calc(100vh-65px)] shadow-sm">
       <div className="space-y-6">
         
-        {/* Sidebar Navigation (Matching screenshot menu styling) */}
+        {/* Sidebar Navigation */}
         <div>
           <nav className="space-y-1">
             {visibleMenuItems.map((item) => {
@@ -105,22 +105,22 @@ export const Sidebar = () => {
                   key={item.id}
                   disabled={item.locked}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     item.locked
                       ? 'text-slate-400 opacity-60 cursor-not-allowed bg-slate-50'
                       : isActive
-                      ? 'bg-purple-100/80 text-purple-900 font-bold border-l-4 border-purple-600 shadow-sm'
-                      : 'text-slate-600 hover:text-purple-900 hover:bg-purple-50/60'
+                      ? 'bg-[#FDF2EE] text-[#E43D12] font-extrabold border-l-4 border-[#E43D12] shadow-sm'
+                      : 'text-[#544C47] hover:text-[#E43D12] hover:bg-[#FDF6F2]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <IconComp className={`w-4 h-4 ${isActive ? 'text-purple-700' : 'text-slate-400'}`} />
+                    <IconComp className={`w-4 h-4 ${isActive ? 'text-[#E43D12]' : 'text-[#8C827A]'}`} />
                     <span className="truncate">{item.label}</span>
                   </div>
 
                   <div className="flex items-center gap-1">
                     {item.badge && !item.locked && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-600 text-white">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#E43D12] text-white shadow-sm">
                         {item.badge}
                       </span>
                     )}
@@ -135,14 +135,14 @@ export const Sidebar = () => {
           </nav>
         </div>
 
-        {/* Lock Info Box — only shown to applicants and privileged roles, not plain faculty */}
+        {/* Lock Info Box */}
         {role !== 'teacher' && (
-          <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] space-y-1.5 shadow-sm">
-            <div className="flex items-center gap-1.5 font-bold text-amber-900">
-              <Lock className="w-3.5 h-3.5 text-amber-700" />
+          <div className="p-3.5 rounded-2xl bg-[#FEF8E7] border border-[#F6D688] text-[#7A5005] text-[11px] space-y-1.5 shadow-sm">
+            <div className="flex items-center gap-1.5 font-bold text-[#966705]">
+              <Lock className="w-3.5 h-3.5 text-[#EFB11D]" />
               <span>Role-Based Access</span>
             </div>
-            <p className="text-[11px] leading-relaxed text-amber-800">
+            <p className="text-[11px] leading-relaxed text-[#7A5005]">
               {role === 'applicant' && 'Department transfers & payslips unlock after faculty appointment.'}
               {role === 'principal' && 'Department-level HOD approvals active.'}
               {role === 'admin' && 'University-wide Registrar administrative access unlocked.'}
@@ -152,11 +152,11 @@ export const Sidebar = () => {
 
       </div>
 
-      {/* Bottom Purple Logout / Switch Role Pill Button (Matching screenshot bottom button) */}
-      <div className="pt-4 border-t border-purple-100">
+      {/* Bottom Vermillion Logout / Switch Role Pill Button */}
+      <div className="pt-4 border-t border-[#E2DDD2]">
         <button
           onClick={logout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold shadow-md shadow-purple-600/20 transition-all uppercase tracking-wide"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#E43D12] hover:bg-[#C7310B] text-white text-xs font-extrabold shadow-md shadow-[#E43D12]/20 transition-all uppercase tracking-wide"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out / Change Persona</span>
